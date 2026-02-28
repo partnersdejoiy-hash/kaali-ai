@@ -13,43 +13,12 @@ const messages=req.body.messages || [];
 const userMessage =
 messages[messages.length-1]?.content || "";
 
-
-/* ==============================
-PRODUCT SEARCH ENGINE
-============================== */
-
-if(
-userMessage.toLowerCase().includes("show") ||
-userMessage.toLowerCase().includes("find") ||
-userMessage.toLowerCase().includes("buy") ||
-userMessage.toLowerCase().includes("product")
-){
-
-let url=`${process.env.WC_URL}/wp-json/wc/v3/products?per_page=5&consumer_key=${process.env.WC_KEY}&consumer_secret=${process.env.WC_SECRET}`;
-
-let response=await fetch(url);
-
-let products=await response.json();
-
-let reply="🛍️ Here are some products:\n\n";
-
-products.forEach(p=>{
-
-reply+=`• ${p.name}\n₹${p.price}\n${p.permalink}\n\n`;
-
-});
-
-return res.json({reply});
-
-}
+const text=userMessage.toLowerCase();
 
 
-
-/* ==============================
-AUTOMATIC ORDER TRACKING
-============================== */
-
-// Detect Order Number
+/* =================================
+AUTO ORDER TRACKING (Smart)
+================================= */
 
 let orderMatch=userMessage.match(/\d{3,}/);
 
@@ -79,7 +48,7 @@ Customer: ${order.billing.first_name}
 
 Date: ${order.date_created}
 
-Your order is being processed 🚚`
+🚚 Your order is on the way.`
 
 });
 
@@ -89,19 +58,19 @@ Your order is being processed 🚚`
 
 
 
-/* ==============================
+/* =================================
 ORDER HELP
-============================== */
+================================= */
 
 if(
-userMessage.toLowerCase().includes("order") ||
-userMessage.toLowerCase().includes("track")
+text.includes("order") ||
+text.includes("track")
 ){
 
 return res.json({
 
 reply:
-"📦 I can track your order automatically.\n\nPlease type your Order ID.\n\nExample:\nTrack 1023"
+"📦 I can track your order.\n\nPlease type your Order ID.\nExample:\nTrack 1023"
 
 });
 
@@ -109,9 +78,96 @@ reply:
 
 
 
-/* ==============================
-SMART AI RESPONSE
-============================== */
+/* =================================
+SMART PRODUCT SEARCH
+================================= */
+
+if(
+text.includes("search") ||
+text.includes("find") ||
+text.includes("buy") ||
+text.includes("product")
+){
+
+let url=
+`${process.env.WC_URL}/wp-json/wc/v3/products?per_page=5&consumer_key=${process.env.WC_KEY}&consumer_secret=${process.env.WC_SECRET}`;
+
+let response=await fetch(url);
+
+let products=await response.json();
+
+let reply="🛍️ Here are some products:\n\n";
+
+products.forEach(p=>{
+
+reply+=`• ${p.name}
+₹${p.price}
+${p.permalink}
+
+`;
+
+});
+
+return res.json({reply});
+
+}
+
+
+
+/* =================================
+RECOMMENDATION ENGINE
+================================= */
+
+if(
+text.includes("recommend") ||
+text.includes("suggest")
+){
+
+let url=
+`${process.env.WC_URL}/wp-json/wc/v3/products?per_page=5&consumer_key=${process.env.WC_KEY}&consumer_secret=${process.env.WC_SECRET}`;
+
+let response=await fetch(url);
+
+let products=await response.json();
+
+let reply="✨ Recommended for you:\n\n";
+
+products.forEach(p=>{
+
+reply+=`• ${p.name}
+₹${p.price}
+${p.permalink}
+
+`;
+
+});
+
+return res.json({reply});
+
+}
+
+
+
+/* =================================
+ADD TO CART AI
+================================= */
+
+if(text.includes("add to cart")){
+
+return res.json({
+
+reply:
+"🛒 I will help you add products to cart.\n\nPlease send product name."
+
+});
+
+}
+
+
+
+/* =================================
+SMART AI BRAIN
+================================= */
 
 const systemPrompt=`
 
@@ -120,16 +176,20 @@ You are KAALI AI of DEJOIY marketplace.
 You help users:
 
 • Find products
-• Track orders automatically
-• Compare prices
+• Track orders
+• Recommend products
 • Shopping help
 • Services help
 
-Speak friendly.
+Rules:
 
-Use emojis sometimes ✨🛍️📦
+- Speak friendly
+- Use emojis sometimes ✨🛍️📦
+- Short answers
+- Reply in user's language
+- Help customer buy products
 
-Reply in user's language.
+DEJOIY is an AI powered marketplace.
 
 `;
 
