@@ -74,9 +74,9 @@ background:#222;
 padding:10px;
 border-radius:12px;
 margin:8px;
-animation:fade .3s;
 
 }
+
 
 /* KAALI */
 
@@ -89,24 +89,18 @@ padding:10px;
 border-radius:12px;
 margin:8px;
 
-animation:fade .5s;
-
 }
 
-/* LINKS MAGIC */
+
+/* LINKS */
 
 .kaali a{
 
-color:#4ec9ff;
-text-decoration:none;
+color:#3cc6ff;
 font-weight:bold;
+text-decoration:none;
 
 }
-
-.kaali a:hover{
-color:gold;
-}
-
 
 /* INPUT */
 
@@ -124,7 +118,6 @@ flex:1;
 padding:12px;
 border-radius:10px;
 border:none;
-font-size:16px;
 
 }
 
@@ -134,36 +127,8 @@ background:gold;
 border:none;
 padding:12px 18px;
 margin-left:6px;
-
 border-radius:10px;
 cursor:pointer;
-
-font-weight:bold;
-
-}
-
-/* ANIMATIONS */
-
-@keyframes fade{
-
-from{
-opacity:0;
-transform:translateY(10px);
-}
-
-to{
-opacity:1;
-transform:translateY(0);
-}
-
-}
-
-
-@keyframes glow{
-
-0%{filter:drop-shadow(0 0 2px gold);}
-50%{filter:drop-shadow(0 0 12px gold);}
-100%{filter:drop-shadow(0 0 2px gold);}
 
 }
 
@@ -190,7 +155,7 @@ transform:translateY(0);
 
 <div class="inputArea">
 
-<input id="input" placeholder="Ask KAALI anything...">
+<input id="input" placeholder="Ask KAALI anything">
 
 <button onclick="send()">Send</button>
 
