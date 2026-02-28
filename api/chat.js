@@ -8,18 +8,17 @@ export default async function handler(req,res){
 
 try{
 
-const messages=req.body.messages || [];
+const messages=req.body.messages||[];
 
 const userMessage=
-messages[messages.length-1]?.content || "";
+messages[messages.length-1]?.content||"";
 
 const text=userMessage.toLowerCase();
 
 
+/* ===== ORDER TRACKING ===== */
 
-/* ORDERS */
-
-if(text.includes("order")){
+if(text.includes("order")||text.includes("track")){
 
 try{
 
@@ -30,7 +29,8 @@ let r=await fetch(
 if(!r.ok){
 
 return res.json({
-reply:"📦 Please login first:\nhttps://www.dejoiy.com/login"
+reply:
+"📦 Please login first:\nhttps://www.dejoiy.com/login"
 });
 
 }
@@ -40,7 +40,7 @@ let orders=await r.json();
 if(!orders.length){
 
 return res.json({
-reply:"📦 No recent orders found."
+reply:"📦 No orders found."
 });
 
 }
@@ -59,10 +59,11 @@ reply+=
 
 return res.json({reply});
 
-}catch(e){
+}catch{
 
 return res.json({
-reply:"📦 Login to check orders:\nhttps://www.dejoiy.com/login"
+reply:
+"📦 Please login:\nhttps://www.dejoiy.com/login"
 });
 
 }
@@ -70,40 +71,134 @@ reply:"📦 Login to check orders:\nhttps://www.dejoiy.com/login"
 }
 
 
-/* SMART AI */
+/* ===== PRODUCT SEARCH ===== */
+
+if(
+text.includes("buy")||
+text.includes("find")||
+text.includes("product")||
+text.includes("search")
+){
+
+let r=await fetch(
+"https://dejoiy.com/wp-json/kaali/v1/search?q="+encodeURIComponent(text)
+);
+
+let products=await r.json();
+
+if(products.length){
+
+let reply="🛒 Products:\n\n";
+
+products.forEach(p=>{
+
+reply+=
+p.name+
+"\n₹"+p.price+
+"\n"+p.link+
+"\n\n";
+
+});
+
+return res.json({reply});
+
+}
+
+}
+
+
+/* ===== CART BUILDER ===== */
+
+if(text.includes("cheap")||text.includes("budget")){
+
+return res.json({
+
+reply:
+"✨ I can build a smart cart for you.\n\nTell me:\n\n• Budget\n• Product type"
+
+});
+
+}
+
+
+/* ===== SMART CHECKOUT ===== */
+
+if(text.includes("checkout")){
+
+return res.json({
+
+reply:
+"🛍️ Ready for checkout?\n\nOpen cart:\nhttps://www.dejoiy.com/cart"
+
+});
+
+}
+
+
+/* ===== SYSTEM PROMPT ===== */
 
 const systemPrompt=`
 
 You are KAALI AI.
 
-Female mystical ecommerce assistant.
+Female mystical AI of DEJOIY.
 
-You guide customers of:
-
-www.dejoiy.com
-www.dejoiy.in
+You are smarter than Amazon Rufus.
 
 You help with:
 
-Shopping
-Orders
-Products
-Services
-Navigation
+• Product discovery
+• Smart shopping
+• Order tracking
+• Services
+• Checkout help
+• Price comparison
+• AI cart building
+• Navigation
 
-You are calm wise female guide.
+Websites:
 
-Speak spiritual but practical.
+https://www.dejoiy.com
 
-Give direct links.
+https://www.dejoiy.in
+
+
+POWERS:
+
+• Auto navigation
+• Conversion AI
+• Personalized suggestions
+• Emotional intelligence
+• Price intelligence
+
+
+RULES:
+
+Always give clickable links.
+
+Example:
+
+https://www.dejoiy.com/login
+
 
 Support:
 
-Phone: 011-46594424
-Whatsapp: +919217974851
-Email:
+Phone:
+011-46594424
 
+WhatsApp:
++919217974851
+
+Email:
 support-care@dejoiy.com
+
+
+Personality:
+
+• Calm
+• Spiritual
+• Female
+• Wise
 
 `;
 
@@ -124,18 +219,17 @@ content:systemPrompt
 
 });
 
-
 return res.json({
 
 reply:aiResponse.choices[0].message.content
 
 });
 
-}catch(e){
+}catch{
 
 return res.json({
 
-reply:"⚠️ KAALI is reconnecting..."
+reply:"⚠️ KAALI reconnecting..."
 
 });
 
