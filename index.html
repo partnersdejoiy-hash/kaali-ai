@@ -20,23 +20,29 @@ font-family:Arial;
 height:100%;
 }
 
-/* Adaptive Layout */
+/* AUTO ADAPT SIZE */
 
 .container{
+
 width:100%;
-max-width:900px;
 height:100%;
+
+max-width:900px;
 margin:auto;
+
 display:flex;
 flex-direction:column;
+
 }
 
-/* Header */
+/* HEADER */
 
 .header{
+
 text-align:center;
 padding:10px;
 border-bottom:1px solid #222;
+
 }
 
 .logo{
@@ -49,72 +55,116 @@ color:gold;
 font-size:22px;
 }
 
-/* Messages */
+/* CHAT */
 
 #messages{
+
 flex:1;
 overflow:auto;
 padding:15px;
+
 }
+
+
+/* USER */
 
 .user{
+
 background:#222;
 padding:10px;
-border-radius:10px;
-margin:6px;
+border-radius:12px;
+margin:8px;
+animation:fade .3s;
+
 }
+
+/* KAALI */
 
 .kaali{
+
 background:black;
 border-left:4px solid gold;
+
 padding:10px;
-border-radius:10px;
-margin:6px;
+border-radius:12px;
+margin:8px;
+
+animation:fade .5s;
+
 }
 
-.typing{
+/* LINKS MAGIC */
+
+.kaali a{
+
+color:#4ec9ff;
+text-decoration:none;
+font-weight:bold;
+
+}
+
+.kaali a:hover{
 color:gold;
 }
 
-/* Input */
+
+/* INPUT */
 
 .inputArea{
+
 display:flex;
 padding:10px;
 border-top:1px solid #222;
+
 }
 
 input{
+
 flex:1;
 padding:12px;
 border-radius:10px;
 border:none;
+font-size:16px;
+
 }
 
 button{
+
 background:gold;
 border:none;
-padding:10px 14px;
-margin-left:5px;
+padding:12px 18px;
+margin-left:6px;
+
 border-radius:10px;
 cursor:pointer;
+
+font-weight:bold;
+
 }
 
-/* Recording Status */
+/* ANIMATIONS */
 
-#recordStatus{
-text-align:center;
-color:gold;
-font-size:14px;
-height:20px;
+@keyframes fade{
+
+from{
+opacity:0;
+transform:translateY(10px);
 }
 
-/* Glow */
+to{
+opacity:1;
+transform:translateY(0);
+}
+
+}
+
 
 @keyframes glow{
-0%{filter:drop-shadow(0px 0px 2px gold);}
-50%{filter:drop-shadow(0px 0px 12px gold);}
-100%{filter:drop-shadow(0px 0px 2px gold);}
+
+0%{filter:drop-shadow(0 0 2px gold);}
+50%{filter:drop-shadow(0 0 12px gold);}
+100%{filter:drop-shadow(0 0 2px gold);}
+
 }
 
 </style>
@@ -122,6 +172,7 @@ height:20px;
 </head>
 
 <body>
+
 
 <div class="container">
 
@@ -133,7 +184,9 @@ height:20px;
 
 </div>
 
+
 <div id="messages"></div>
+
 
 <div class="inputArea">
 
@@ -141,204 +194,16 @@ height:20px;
 
 <button onclick="send()">Send</button>
 
-<button onclick="record()">🎤</button>
+<button onclick="startVoice()">🎤</button>
 
-<button onclick="speak(lastReply)">🔊</button>
-
-</div>
-
-<div id="recordStatus"></div>
+<button onclick="speakLast()">🔊</button>
 
 </div>
 
+</div>
 
-<script>
 
-/* MEMORY */
-
-let history=[];
-let lastReply="";
-
-
-/* OPENING MESSAGE */
-
-let greeting=
-
-"✨ Namaste. I am KAALI — your mystical guide at DEJOIY. I can help you shop smarter, track orders, discover products and services. How may I assist you today? 🔮";
-
-document.getElementById("messages").innerHTML=
-
-"<div class='kaali'>"+greeting+"</div>";
-
-history.push({
-role:"assistant",
-content:greeting
-});
-
-
-/* SEND MESSAGE */
-
-async function send(){
-
-let input=document.getElementById("input");
-
-let msg=input.value.trim();
-
-if(!msg) return;
-
-input.value="";
-
-let box=document.getElementById("messages");
-
-
-box.innerHTML+=
-
-"<div class='user'>"+msg+"</div>";
-
-
-history.push({
-role:"user",
-content:msg
-});
-
-
-box.innerHTML+=
-
-"<div class='kaali typing'>KAALI is thinking...</div>";
-
-box.scrollTop=box.scrollHeight;
-
-
-let res=await fetch("/api/chat",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-messages:history
-})
-
-});
-
-
-let data=await res.json();
-
-
-box.removeChild(box.lastChild);
-
-
-lastReply=data.reply;
-
-
-history.push({
-role:"assistant",
-content:data.reply
-});
-
-
-box.innerHTML+=
-
-"<div class='kaali'>"+data.reply+"</div>";
-
-box.scrollTop=box.scrollHeight;
-
-}
-
-
-
-/* ENTER KEY */
-
-document.getElementById("input")
-
-.addEventListener("keydown",function(e){
-
-if(e.key==="Enter"){
-send();
-}
-
-});
-
-
-
-/* GODDESS VOICE */
-
-function speak(text){
-
-let clean=text.replace(/[^\w\s.,]/gi,'');
-
-let speech=new SpeechSynthesisUtterance(clean);
-
-let voices=speechSynthesis.getVoices();
-
-speech.voice=
-
-voices.find(v=>v.name.includes("Female"))
-||
-voices.find(v=>v.name.includes("Zira"))
-||
-voices[0];
-
-
-speech.rate=0.85;
-speech.pitch=1.25;
-speech.volume=1;
-
-speechSynthesis.cancel();
-
-speechSynthesis.speak(speech);
-
-}
-
-
-
-/* RECORD */
-
-let rec;
-
-if(window.webkitSpeechRecognition){
-
-rec=new webkitSpeechRecognition();
-
-rec.lang="en-IN";
-
-rec.onstart=function(){
-
-document.getElementById("recordStatus")
-
-.innerHTML="🎤 Listening...";
-
-}
-
-rec.onend=function(){
-
-document.getElementById("recordStatus")
-
-.innerHTML="";
-
-}
-
-rec.onresult=function(e){
-
-document.getElementById("input").value=
-
-e.results[0][0].transcript;
-
-}
-
-}
-
-
-function record(){
-
-rec.start();
-
-}
-
-</script>
+<script src="chat.js"></script>
 
 </body>
-
 </html>
