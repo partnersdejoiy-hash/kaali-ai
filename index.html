@@ -5,74 +5,145 @@
 
 <title>KAALI AI</title>
 
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
 
+/* ================= BODY ================= */
+
 body{
+
 background:black;
 color:white;
 font-family:Arial;
-text-align:center;
+
 margin:0;
+padding:0;
+
+display:flex;
+flex-direction:column;
+
+height:100vh;
+
 }
 
 
-/* LOGO */
+
+/* ================= HEADER ================= */
+
+.header{
+
+text-align:center;
+padding:10px;
+
+border-bottom:1px solid #222;
+
+}
+
 
 .logo{
-width:130px;
-margin-top:30px;
+
+width:80px;
+
+margin-top:5px;
+
 animation:glow 3s infinite;
+
 }
 
 
-/* TITLE */
+.title{
 
-h1{
 color:gold;
-font-size:50px;
-margin-bottom:10px;
-}
-
-
-/* CHAT BOX */
-
-.chatbox{
-
-background:#111;
-
-width:650px;
-
-margin:auto;
-
-padding:30px;
-
-border-radius:20px;
-
-box-shadow:0px 0px 40px rgba(255,215,0,0.5);
+font-size:28px;
+margin:5px;
 
 }
 
 
-/* INPUT */
+
+/* ================= CHAT AREA ================= */
+
+#messages{
+
+flex:1;
+
+overflow:auto;
+
+padding:15px;
+
+}
+
+
+
+/* ================= MESSAGE BUBBLES ================= */
+
+.user{
+
+background:#222;
+
+padding:10px;
+
+border-radius:10px;
+
+margin:6px;
+
+animation:fadeIn 0.4s ease;
+
+}
+
+
+.kaali{
+
+background:#000;
+
+border-left:4px solid gold;
+
+padding:10px;
+
+border-radius:10px;
+
+margin:6px;
+
+animation:fadeIn 0.6s ease;
+
+}
+
+
+
+/* ================= INPUT AREA ================= */
+
+.inputArea{
+
+display:flex;
+
+padding:10px;
+
+border-top:1px solid #222;
+
+background:black;
+
+}
+
+
 
 input{
 
-width:70%;
+flex:1;
 
-padding:15px;
+padding:12px;
 
 border-radius:10px;
 
 border:none;
 
-font-size:18px;
+font-size:16px;
 
 outline:none;
 
 }
 
 
-/* BUTTON */
 
 button{
 
@@ -80,11 +151,11 @@ background:gold;
 
 border:none;
 
-padding:15px 25px;
+padding:12px 20px;
 
 border-radius:10px;
 
-font-size:18px;
+margin-left:8px;
 
 cursor:pointer;
 
@@ -102,60 +173,17 @@ background:#ffd700cc;
 }
 
 
-/* MESSAGE AREA */
 
-#messages{
+/* ================= ANIMATIONS ================= */
 
-margin-top:20px;
+@keyframes glow{
 
-text-align:left;
-
-height:350px;
-
-overflow:auto;
-
-padding-right:10px;
+0%{filter:drop-shadow(0px 0px 2px gold);}
+50%{filter:drop-shadow(0px 0px 12px gold);}
+100%{filter:drop-shadow(0px 0px 2px gold);}
 
 }
 
-
-
-/* MESSAGE BUBBLES */
-
-.user{
-
-background:#222;
-
-padding:10px;
-
-border-radius:10px;
-
-margin:8px;
-
-animation:fadeIn 0.4s ease;
-
-}
-
-
-.kaali{
-
-background:#000;
-
-border-left:4px solid gold;
-
-padding:10px;
-
-border-radius:10px;
-
-margin:8px;
-
-animation:fadeIn 0.6s ease;
-
-}
-
-
-
-/* FADE ANIMATION */
 
 @keyframes fadeIn{
 
@@ -172,34 +200,40 @@ transform:translateY(0);
 }
 
 
-/* GLOW ANIMATION */
 
-@keyframes glow{
-
-0%{filter:drop-shadow(0px 0px 2px gold);}
-50%{filter:drop-shadow(0px 0px 15px gold);}
-100%{filter:drop-shadow(0px 0px 2px gold);}
-
-}
-
-
-/* TYPING ANIMATION */
+/* ================= TYPING ================= */
 
 .typing{
 
 color:gold;
-
 font-style:italic;
 
 animation:pulse 1s infinite;
 
 }
 
+
 @keyframes pulse{
 
 0%{opacity:0.3}
 50%{opacity:1}
 100%{opacity:0.3}
+
+}
+
+
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:768px){
+
+.title{
+font-size:22px;
+}
+
+.logo{
+width:60px;
+}
 
 }
 
@@ -213,23 +247,37 @@ animation:pulse 1s infinite;
 <body>
 
 
+
+<!-- HEADER -->
+
+<div class="header">
+
 <img src="kaali.png" class="logo">
 
-<h1>KAALI AI</h1>
+<div class="title">KAALI AI</div>
+
+</div>
 
 
-<div class="chatbox">
 
+<!-- CHAT AREA -->
+
+<div id="messages">
+
+</div>
+
+
+
+<!-- INPUT AREA -->
+
+<div class="inputArea">
 
 <input id="input" placeholder="Ask KAALI anything...">
 
 <button onclick="send()">Send</button>
 
-
-<div id="messages"></div>
-
-
 </div>
+
 
 
 
@@ -238,13 +286,12 @@ animation:pulse 1s infinite;
 
 
 // ==========================
-// CONVERSATION MEMORY
+// MEMORY SYSTEM
 // ==========================
 
 let history=[];
 
 let started=false;
-
 
 
 
@@ -264,7 +311,7 @@ input.value="";
 
 
 
-// Show User Message
+// USER MESSAGE
 
 document.getElementById("messages").innerHTML+=
 
@@ -272,7 +319,7 @@ document.getElementById("messages").innerHTML+=
 
 
 
-// First Message Logic
+// FIRST MESSAGE LOGIC
 
 if(!started){
 
@@ -280,7 +327,7 @@ history.push({
 
 role:"assistant",
 
-content:"✨ Namaste! I am KAALI, your mystical guide at DEJOIY. How may I assist you today?"
+content:"✨ Namaste! I am KAALI, your mystical guide at DEJOIY. How may I assist you today? 🔮"
 
 });
 
@@ -290,20 +337,18 @@ started=true;
 
 
 
-// Save User Message
+// SAVE USER MESSAGE
 
 history.push({
 
 role:"user",
-
 content:msg
 
 });
 
 
 
-
-// Typing Animation
+// SHOW TYPING
 
 document.getElementById("messages").innerHTML+=
 
@@ -332,41 +377,38 @@ let data=await res.json();
 
 
 
-// Remove typing animation
+// REMOVE TYPING
 
-let messagesDiv=document.getElementById("messages");
+let box=document.getElementById("messages");
 
-messagesDiv.removeChild(messagesDiv.lastChild);
+box.removeChild(box.lastChild);
 
 
 
-// Save Reply
+// SAVE REPLY
 
 history.push({
 
 role:"assistant",
-
 content:data.reply
 
 });
 
 
 
-// Show Reply
+// SHOW REPLY
 
-messagesDiv.innerHTML+=
+box.innerHTML+=
 
 "<div class='kaali'><b>KAALI:</b> "+data.reply+"</div>";
 
 
 
+// AUTO SCROLL
 
-// Auto Scroll
-
-messagesDiv.scrollTop=messagesDiv.scrollHeight;
+box.scrollTop=box.scrollHeight;
 
 }
-
 
 
 
@@ -385,7 +427,6 @@ send();
 }
 
 });
-
 
 
 </script>
