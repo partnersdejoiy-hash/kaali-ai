@@ -1,52 +1,36 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({
- apiKey: process.env.OPENAI_API_KEY
+const openai=new OpenAI({
+apiKey:process.env.OPENAI_API_KEY
 });
 
 export default async function handler(req,res){
 
-try{
+const messages=req.body.messages||[];
 
-const messages=req.body.messages || [];
+const last=messages[messages.length-1]?.content||"";
 
-const userMessage =
-messages[messages.length-1]?.content || "";
-
-const text=userMessage.toLowerCase();
+const text=last.toLowerCase();
 
 
-
-/* =========================
-ORDER TRACKING
-========================= */
+/* ===== ORDERS ===== */
 
 if(text.includes("order")){
 
-let r=await fetch("https://dejoiy.com/wp-json/kaali/v1/orders");
+let r=await fetch(
+"https://dejoiy.com/wp-json/kaali/v1/orders"
+);
 
 let orders=await r.json();
-
-if(orders.length==0){
-
-return res.json({
-
-reply:"📦 I couldn't find any orders. Please login first."
-
-});
-
-}
 
 let reply="📦 Your Orders:\n\n";
 
 orders.forEach(o=>{
 
-reply+=`Order #${o.id}
-Status: ${o.status}
-Total: ₹${o.total}
-Date: ${o.date}
-
-`;
+reply+=
+"Order "+o.id+
+" | "+o.status+
+" | ₹"+o.total+"\n";
 
 });
 
@@ -55,37 +39,31 @@ return res.json({reply});
 }
 
 
-
-/* =========================
-PRODUCT SEARCH
-========================= */
+/* ===== PRODUCT SEARCH ===== */
 
 if(
-text.includes("find") ||
-text.includes("search") ||
-text.includes("buy") ||
-text.includes("product")
+text.includes("search")||
+text.includes("find")||
+text.includes("buy")
 ){
-
-let q=text.replace("search","").replace("find","");
 
 let r=await fetch(
 
-`https://dejoiy.com/wp-json/kaali/v1/search?q=${q}`
+"https://dejoiy.com/wp-json/kaali/v1/search?q="+text
 
 );
 
 let products=await r.json();
 
-let reply="🛒 Here are some products:\n\n";
+if(products.length>0){
+
+let reply="🛒 Available on DEJOIY:\n\n";
 
 products.forEach(p=>{
 
-reply+=`${p.name}
-₹${p.price}
-${p.link}
-
-`;
+reply+=
+p.name+" ₹"+p.price+
+"\n"+p.link+"\n\n";
 
 });
 
@@ -94,179 +72,56 @@ return res.json({reply});
 }
 
 
-
-/* =========================
-AUTO RECOMMEND PRODUCTS
-========================= */
-
-if(
-text.includes("recommend") ||
-text.includes("suggest") ||
-text.includes("best")
-){
-
-let r=await fetch(
-
-"https://dejoiy.com/wp-json/kaali/v1/products"
-
-);
-
-let products=await r.json();
-
-let reply="✨ Recommended for you:\n\n";
-
-products.forEach(p=>{
-
-reply+=`${p.name}
-₹${p.price}
-${p.link}
-
-`;
-
-});
-
-return res.json({reply});
-
-}
-
-
-
-/* =========================
-AI CART BUILDER
-========================= */
-
-if(
-text.includes("add") ||
-text.includes("cart")
-){
-
-let r=await fetch(
-
-"https://dejoiy.com/wp-json/kaali/v1/products"
-
-);
-
-let products=await r.json();
-
-let product=products[0];
-
-await fetch(
-
-"https://dejoiy.com/wp-json/kaali/v1/add-to-cart",
-
-{
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-product_id:product.id
-
-})
-
-}
-
-);
+/* ===== OUTSIDE REFERENCES ===== */
 
 return res.json({
 
 reply:
-"🛒 I added a product to your cart.\n\nYou can checkout now."
+
+"🔮 I couldn't find this on DEJOIY.\n\nTry here:\n\nAmazon:\nhttps://www.amazon.in/s?k="+text+"\n\nFlipkart:\nhttps://www.flipkart.com/search?q="+text
 
 });
 
 }
 
 
+/* ===== AI BRAIN ===== */
 
-/* =========================
-CHECKOUT ASSISTANT
-========================= */
+const system=`
 
-if(
-text.includes("checkout") ||
-text.includes("payment")
-){
+You are KAALI.
 
-return res.json({
+Divine mystical female AI assistant.
 
-reply:
-"💳 You can complete your order here:\n\nhttps://dejoiy.com/cart\n\nI will guide you if needed ✨"
+You know everything.
 
-});
+You help customers shop.
 
-}
+You track orders.
 
+You suggest products.
 
+You guide checkout.
 
-/* =========================
-SMART AI BRAIN
-========================= */
+Speak like a divine female guide.
 
-const systemPrompt=`
-
-You are KAALI AI.
-
-Mystical female shopping assistant of DEJOIY.
-
-Personality:
-
-• Female guide
-• Smart
-• Helpful
-• Friendly
-• Mystical tone
-
-Capabilities:
-
-• Recommend products
-• Track orders
-• Add items to cart
-• Help checkout
-• Compare products
-
-Speak like a friendly female assistant.
-
-Use emojis sometimes ✨🛍️📦🔮
-
-Reply in user's language.
+Use emojis sometimes 🔮✨🛍️
 
 `;
 
-
-
-const aiResponse=await openai.chat.completions.create({
+const ai=await openai.chat.completions.create({
 
 model:"gpt-4o-mini",
 
 messages:[
-{
-role:"system",
-content:systemPrompt
-},
+{role:"system",content:system},
 ...messages
 ]
 
 });
 
-
 res.json({
-
-reply:aiResponse.choices[0].message.content
-
+reply:ai.choices[0].message.content
 });
-
-}catch(e){
-
-res.json({
-
-reply:"⚠️ KAALI AI is temporarily unavailable."
-
-});
-
-}
 
 }
