@@ -7,242 +7,114 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<link rel="icon" type="image/png" href="kaali.png">
+<link rel="icon" href="kaali.png">
 
 <style>
 
-/* ================= BODY ================= */
+/* ===== BODY ===== */
 
 html,body{
-
 margin:0;
 padding:0;
-
 background:black;
 color:white;
 font-family:Arial;
-
 height:100%;
 overflow:hidden;
-
-display:flex;
-justify-content:center;
-
 }
 
-
-/* ================= MAIN ================= */
+/* ===== CONTAINER ===== */
 
 .container{
-
 width:100%;
 max-width:420px;
-
 height:100%;
-
 display:flex;
 flex-direction:column;
-
-background:black;
-
 }
 
-
-/* ================= HEADER ================= */
+/* ===== HEADER ===== */
 
 .header{
-
 text-align:center;
-padding:12px;
-
+padding:10px;
 border-bottom:1px solid #222;
-
 }
 
 .logo{
-
-width:70px;
+width:60px;
 animation:glow 3s infinite;
-
 }
 
 .title{
-
 color:gold;
-font-size:22px;
-margin-top:5px;
-
+font-size:20px;
 }
 
-
-/* ================= CHAT ================= */
+/* ===== CHAT ===== */
 
 #messages{
-
 flex:1;
-
 overflow-y:auto;
-
-padding:15px;
-
+padding:10px;
 }
 
-
-/* ================= MESSAGES ================= */
+/* ===== MESSAGES ===== */
 
 .user{
-
 background:#222;
 padding:10px;
-border-radius:12px;
+border-radius:10px;
 margin:6px;
-
-animation:fadeIn .4s;
-
 }
 
-
 .kaali{
-
 background:#000;
 border-left:4px solid gold;
 padding:10px;
-border-radius:12px;
+border-radius:10px;
 margin:6px;
-
-animation:fadeIn .6s;
-
 }
 
-
-/* ================= INPUT ================= */
+/* ===== INPUT ===== */
 
 .inputArea{
-
 display:flex;
-
 padding:10px;
-
 border-top:1px solid #222;
-
-background:black;
-
 }
-
 
 input{
-
 flex:1;
-
-padding:12px;
-
+padding:10px;
 border-radius:10px;
-
 border:none;
-
-font-size:15px;
-
-outline:none;
-
 }
-
 
 button{
-
 background:gold;
-
 border:none;
-
-padding:12px 20px;
-
+padding:10px 14px;
 border-radius:10px;
-
-margin-left:8px;
-
+margin-left:5px;
 cursor:pointer;
-
-font-weight:bold;
-
 }
 
-
-button:hover{
-
-background:#ffd700cc;
-
-}
-
-
-/* ================= ANIMATION ================= */
+/* ===== GLOW ===== */
 
 @keyframes glow{
-
 0%{filter:drop-shadow(0px 0px 2px gold);}
 50%{filter:drop-shadow(0px 0px 12px gold);}
 100%{filter:drop-shadow(0px 0px 2px gold);}
-
-}
-
-@keyframes fadeIn{
-
-from{
-opacity:0;
-transform:translateY(10px);
-}
-
-to{
-opacity:1;
-transform:translateY(0);
-}
-
-}
-
-
-/* ================= TYPING ================= */
-
-.typing{
-
-color:gold;
-font-style:italic;
-
-}
-
-
-/* ================= SCROLL ================= */
-
-::-webkit-scrollbar{
-width:6px;
-}
-
-::-webkit-scrollbar-thumb{
-background:gold;
-border-radius:10px;
-}
-
-
-/* ================= MOBILE ================= */
-
-@media(max-width:600px){
-
-.container{
-max-width:100%;
-}
-
 }
 
 </style>
 
 </head>
 
-
-
 <body>
 
-
 <div class="container">
-
-
-<!-- HEADER -->
 
 <div class="header">
 
@@ -253,34 +125,26 @@ max-width:100%;
 </div>
 
 
-
-<!-- CHAT -->
-
 <div id="messages"></div>
 
 
-
-<!-- INPUT -->
-
 <div class="inputArea">
 
-<input id="input" placeholder="Ask KAALI anything...">
+<input id="input" placeholder="Ask Kaali anything">
 
 <button onclick="send()">Send</button>
 
+<button onclick="voiceInput()">🎤</button>
+
+<button onclick="speakLast()">🔊</button>
+
 </div>
 
-
 </div>
-
-
 
 <script>
 
-
-/* =========================
-KAALI MEMORY
-========================= */
+/* ===== MEMORY ===== */
 
 let history=[
 
@@ -291,20 +155,14 @@ content:"✨ Namaste! I am KAALI, your mystical guide at DEJOIY. How may I assis
 
 ];
 
-
-/* =========================
-SHOW GREETING
-========================= */
-
 document.getElementById("messages").innerHTML=
 
 "<div class='kaali'><b>KAALI:</b> ✨ Namaste! I am KAALI, your mystical guide at DEJOIY. How may I assist you today? 🔮</div>";
 
+let lastReply="";
 
 
-/* =========================
-SEND MESSAGE
-========================= */
+/* ===== SEND ===== */
 
 async function send(){
 
@@ -316,38 +174,18 @@ if(!msg) return;
 
 input.value="";
 
-
 let box=document.getElementById("messages");
 
-
-/* USER MESSAGE */
-
 box.innerHTML+=
-
 "<div class='user'><b>You:</b> "+msg+"</div>";
 
-
-/* SAVE MEMORY */
-
 history.push({
-
 role:"user",
 content:msg
-
 });
 
-
-/* TYPING */
-
 box.innerHTML+=
-
-"<div class='kaali typing'>KAALI is thinking... 🔮</div>";
-
-box.scrollTop=box.scrollHeight;
-
-
-
-/* API CALL */
+"<div class='kaali'>Kaali is thinking 🔮</div>";
 
 let res=await fetch("/api/chat",{
 
@@ -358,61 +196,81 @@ headers:{
 },
 
 body:JSON.stringify({
-
 messages:history
-
 })
 
 });
 
-
 let data=await res.json();
-
-
-/* REMOVE TYPING */
 
 box.removeChild(box.lastChild);
 
-
-/* SAVE MEMORY */
-
 history.push({
-
 role:"assistant",
 content:data.reply
-
 });
 
-
-/* SHOW RESPONSE */
+lastReply=data.reply;
 
 box.innerHTML+=
-
 "<div class='kaali'><b>KAALI:</b> "+data.reply+"</div>";
-
 
 box.scrollTop=box.scrollHeight;
 
 }
 
 
-
-/* =========================
-ENTER KEY
-========================= */
+/* ===== ENTER ===== */
 
 document.getElementById("input")
-
-.addEventListener("keydown",function(e){
-
+.addEventListener("keydown",e=>{
 if(e.key==="Enter") send();
-
 });
 
 
+/* ===== VOICE INPUT ===== */
+
+function voiceInput(){
+
+const SpeechRecognition=
+window.SpeechRecognition||
+window.webkitSpeechRecognition;
+
+const recog=new SpeechRecognition();
+
+recog.lang="en-IN";
+
+recog.start();
+
+recog.onresult=e=>{
+
+document.getElementById("input").value=
+e.results[0][0].transcript;
+
+send();
+
+};
+
+}
+
+
+/* ===== KAALI VOICE ===== */
+
+function speakLast(){
+
+let speech=new SpeechSynthesisUtterance(lastReply);
+
+speech.lang="en-IN";
+
+speech.rate=1;
+
+speech.pitch=1.1;
+
+speechSynthesis.speak(speech);
+
+}
+
 </script>
 
-
 </body>
-
 </html>
