@@ -3,7 +3,7 @@
 
 <head>
 
-<title>Kaali AI</title>
+<title>KAALI AI</title>
 
 <style>
 
@@ -12,54 +12,202 @@ background:black;
 color:white;
 font-family:Arial;
 text-align:center;
+margin:0;
 }
 
+
+/* LOGO */
+
 .logo{
-width:120px;
-margin-top:40px;
+width:130px;
+margin-top:30px;
+animation:glow 3s infinite;
 }
+
+
+/* TITLE */
 
 h1{
 color:gold;
 font-size:50px;
+margin-bottom:10px;
 }
+
+
+/* CHAT BOX */
 
 .chatbox{
+
 background:#111;
-width:600px;
+
+width:650px;
+
 margin:auto;
+
 padding:30px;
+
 border-radius:20px;
-box-shadow:0px 0px 30px gold;
+
+box-shadow:0px 0px 40px rgba(255,215,0,0.5);
+
 }
+
+
+/* INPUT */
 
 input{
+
 width:70%;
+
 padding:15px;
+
 border-radius:10px;
+
 border:none;
+
 font-size:18px;
+
+outline:none;
+
 }
+
+
+/* BUTTON */
 
 button{
+
 background:gold;
+
 border:none;
+
 padding:15px 25px;
+
 border-radius:10px;
+
 font-size:18px;
+
 cursor:pointer;
+
+font-weight:bold;
+
+transition:0.3s;
+
 }
 
-#messages{
-margin-top:20px;
-text-align:left;
-height:300px;
-overflow:auto;
+
+button:hover{
+
+background:#ffd700cc;
+
 }
+
+
+/* MESSAGE AREA */
+
+#messages{
+
+margin-top:20px;
+
+text-align:left;
+
+height:350px;
+
+overflow:auto;
+
+padding-right:10px;
+
+}
+
+
+
+/* MESSAGE BUBBLES */
+
+.user{
+
+background:#222;
+
+padding:10px;
+
+border-radius:10px;
+
+margin:8px;
+
+animation:fadeIn 0.4s ease;
+
+}
+
+
+.kaali{
+
+background:#000;
+
+border-left:4px solid gold;
+
+padding:10px;
+
+border-radius:10px;
+
+margin:8px;
+
+animation:fadeIn 0.6s ease;
+
+}
+
+
+
+/* FADE ANIMATION */
+
+@keyframes fadeIn{
+
+from{
+opacity:0;
+transform:translateY(10px);
+}
+
+to{
+opacity:1;
+transform:translateY(0);
+}
+
+}
+
+
+/* GLOW ANIMATION */
+
+@keyframes glow{
+
+0%{filter:drop-shadow(0px 0px 2px gold);}
+50%{filter:drop-shadow(0px 0px 15px gold);}
+100%{filter:drop-shadow(0px 0px 2px gold);}
+
+}
+
+
+/* TYPING ANIMATION */
+
+.typing{
+
+color:gold;
+
+font-style:italic;
+
+animation:pulse 1s infinite;
+
+}
+
+@keyframes pulse{
+
+0%{opacity:0.3}
+50%{opacity:1}
+100%{opacity:0.3}
+
+}
+
 
 </style>
 
 </head>
+
 
 
 <body>
@@ -72,39 +220,37 @@ overflow:auto;
 
 <div class="chatbox">
 
-<input id="input" placeholder="Ask Kaali anything">
+
+<input id="input" placeholder="Ask KAALI anything...">
 
 <button onclick="send()">Send</button>
 
+
 <div id="messages"></div>
 
+
 </div>
+
 
 
 
 <script>
 
 
-// ========================
-// KAALI MEMORY + WELCOME
-// ========================
+// ==========================
+// CONVERSATION MEMORY
+// ==========================
 
-let history=[
-{
-role:"assistant",
-content:"✨ Namaste! I am KAALI, your mystical guide at DEJOIY. How may I assist you today?"
-}
-];
+let history=[];
 
-document.getElementById("messages").innerHTML=
-"<p><b>Kaali:</b> ✨ Namaste! I am KAALI, your mystical guide at DEJOIY. How may I assist you today?</p>";
+let started=false;
 
 
 
 
-// ========================
+// ==========================
 // SEND MESSAGE
-// ========================
+// ==========================
 
 async function send(){
 
@@ -117,18 +263,39 @@ if(!msg) return;
 input.value="";
 
 
+
 // Show User Message
 
 document.getElementById("messages").innerHTML+=
-"<p><b>You:</b> "+msg+"</p>";
+
+"<div class='user'><b>You:</b> "+msg+"</div>";
 
 
 
-// Save User Memory
+// First Message Logic
+
+if(!started){
+
+history.push({
+
+role:"assistant",
+
+content:"✨ Namaste! I am KAALI, your mystical guide at DEJOIY. How may I assist you today?"
+
+});
+
+started=true;
+
+}
+
+
+
+// Save User Message
 
 history.push({
 
 role:"user",
+
 content:msg
 
 });
@@ -136,7 +303,13 @@ content:msg
 
 
 
-// Send to API
+// Typing Animation
+
+document.getElementById("messages").innerHTML+=
+
+"<div class='kaali typing'>KAALI is thinking... 🔮</div>";
+
+
 
 let res=await fetch("/api/chat",{
 
@@ -159,40 +332,47 @@ let data=await res.json();
 
 
 
-// Save Reply Memory
+// Remove typing animation
+
+let messagesDiv=document.getElementById("messages");
+
+messagesDiv.removeChild(messagesDiv.lastChild);
+
+
+
+// Save Reply
 
 history.push({
 
 role:"assistant",
+
 content:data.reply
 
 });
 
 
 
-
 // Show Reply
 
-document.getElementById("messages").innerHTML+=
-"<p><b>Kaali:</b> "+data.reply+"</p>";
+messagesDiv.innerHTML+=
+
+"<div class='kaali'><b>KAALI:</b> "+data.reply+"</div>";
 
 
 
 
 // Auto Scroll
 
-let box=document.getElementById("messages");
-
-box.scrollTop=box.scrollHeight;
+messagesDiv.scrollTop=messagesDiv.scrollHeight;
 
 }
 
 
 
 
-// ========================
+// ==========================
 // ENTER KEY SUPPORT
-// ========================
+// ==========================
 
 document.getElementById("input")
 
