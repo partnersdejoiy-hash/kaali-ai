@@ -8,56 +8,93 @@
 <style>
 
 body{
-background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-font-family:Arial;
 margin:0;
-color:white;
+font-family:Arial;
+background:black;
+color:#FFD700;
 text-align:center;
 }
 
-h1{
-margin-top:50px;
-font-size:40px;
+/* Logo */
+
+#logo{
+
+margin-top:40px;
+width:160px;
+
 }
+
+/* Title */
+
+h1{
+
+font-size:40px;
+margin-top:10px;
+}
+
+/* Chat Box */
 
 #chatbox{
 
+width:420px;
 margin:auto;
-margin-top:40px;
-width:400px;
+margin-top:30px;
+
 background:#111;
+
 border-radius:20px;
+
 padding:20px;
-box-shadow:0px 0px 40px rgba(0,0,0,0.5);
+
+box-shadow:0px 0px 40px rgba(255,215,0,0.3);
 
 }
+
+/* Input */
 
 input{
 
 width:70%;
+
 padding:12px;
+
 border-radius:10px;
+
 border:none;
 
 }
+
+/* Button */
 
 button{
 
 padding:12px 20px;
-background:#00c3ff;
+
+background:#FFD700;
+
 border:none;
+
 border-radius:10px;
-color:white;
+
+color:black;
+
 font-weight:bold;
 
 }
 
+/* Messages */
+
 #messages{
 
 margin-top:20px;
+
 text-align:left;
+
 max-height:300px;
+
 overflow:auto;
+
+color:white;
 
 }
 
@@ -67,7 +104,9 @@ overflow:auto;
 
 <body>
 
-<h1>Kaali AI Assistant</h1>
+<img id="logo" src="kaali.png">
+
+<h1>KAALI AI</h1>
 
 <div id="chatbox">
 
@@ -112,4 +151,5 @@ document.getElementById("messages").innerHTML+=
 </script>
 
 </body>
+
 </html>
