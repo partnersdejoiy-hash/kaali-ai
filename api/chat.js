@@ -4,21 +4,26 @@ const openai = new OpenAI({
  apiKey: process.env.OPENAI_API_KEY
 });
 
-
 export default async function handler(req,res){
 
 try{
 
 const messages=req.body.messages || [];
 
-const userMessage=messages[messages.length-1]?.content || "";
+const userMessage =
+messages[messages.length-1]?.content || "";
 
 
-// ================= PRODUCT SEARCH =================
+/* ==============================
+PRODUCT SEARCH ENGINE
+============================== */
 
-if(userMessage.toLowerCase().includes("show") ||
+if(
+userMessage.toLowerCase().includes("show") ||
 userMessage.toLowerCase().includes("find") ||
-userMessage.toLowerCase().includes("buy")){
+userMessage.toLowerCase().includes("buy") ||
+userMessage.toLowerCase().includes("product")
+){
 
 let url=`${process.env.WC_URL}/wp-json/wc/v3/products?per_page=5&consumer_key=${process.env.WC_KEY}&consumer_secret=${process.env.WC_SECRET}`;
 
@@ -26,7 +31,7 @@ let response=await fetch(url);
 
 let products=await response.json();
 
-let reply="Here are some products 🛍️\n\n";
+let reply="🛍️ Here are some products:\n\n";
 
 products.forEach(p=>{
 
@@ -40,13 +45,63 @@ return res.json({reply});
 
 
 
-// ================= ORDER TRACKING =================
+/* ==============================
+AUTOMATIC ORDER TRACKING
+============================== */
 
-if(userMessage.includes("order")){
+// Detect Order Number
+
+let orderMatch=userMessage.match(/\d{3,}/);
+
+if(orderMatch){
+
+let orderId=orderMatch[0];
+
+let orderUrl=
+`${process.env.WC_URL}/wp-json/wc/v3/orders/${orderId}?consumer_key=${process.env.WC_KEY}&consumer_secret=${process.env.WC_SECRET}`;
+
+let orderResponse=await fetch(orderUrl);
+
+let order=await orderResponse.json();
+
+if(order.id){
 
 return res.json({
 
-reply:"📦 I can track your order.\n\nPlease share your Order ID."
+reply:
+`📦 Order #${order.id}
+
+Status: ${order.status}
+
+Total: ₹${order.total}
+
+Customer: ${order.billing.first_name}
+
+Date: ${order.date_created}
+
+Your order is being processed 🚚`
+
+});
+
+}
+
+}
+
+
+
+/* ==============================
+ORDER HELP
+============================== */
+
+if(
+userMessage.toLowerCase().includes("order") ||
+userMessage.toLowerCase().includes("track")
+){
+
+return res.json({
+
+reply:
+"📦 I can track your order automatically.\n\nPlease type your Order ID.\n\nExample:\nTrack 1023"
 
 });
 
@@ -54,7 +109,9 @@ reply:"📦 I can track your order.\n\nPlease share your Order ID."
 
 
 
-// ================= AI RESPONSE =================
+/* ==============================
+SMART AI RESPONSE
+============================== */
 
 const systemPrompt=`
 
@@ -62,19 +119,19 @@ You are KAALI AI of DEJOIY marketplace.
 
 You help users:
 
-- Find products
-- Track orders
-- Compare prices
-- Shopping help
+• Find products
+• Track orders automatically
+• Compare prices
+• Shopping help
+• Services help
 
-Speak friendly and smart.
+Speak friendly.
 
 Use emojis sometimes ✨🛍️📦
 
 Reply in user's language.
 
 `;
-
 
 
 const aiResponse=await openai.chat.completions.create({
@@ -103,7 +160,7 @@ reply:aiResponse.choices[0].message.content
 
 res.json({
 
-reply:"⚠️ KAALI is reconnecting..."
+reply:"⚠️ KAALI could not fetch data. Please try again."
 
 });
 
