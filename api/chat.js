@@ -1,64 +1,58 @@
 import OpenAI from "openai";
 
-const openai=new OpenAI({
-
-apiKey:process.env.OPENAI_API_KEY
-
+const openai = new OpenAI({
+ apiKey: process.env.OPENAI_API_KEY
 });
 
 export default async function handler(req,res){
 
 try{
 
-let messages=req.body.messages;
-
-let last=messages[messages.length-1].content.toLowerCase();
-
+const messages=req.body.messages || [];
+const userMessage=messages[messages.length-1]?.content || "";
 
 
-/* ORDERS */
+/* ORDER TRACKING */
 
-if(last.includes("order")){
+if(userMessage.toLowerCase().includes("order")){
 
-let r=await fetch(
+try{
 
-"https://dejoiy.com/wp-json/kaali/v1/orders"
+let r=await fetch("https://dejoiy.com/wp-json/kaali/v1/orders",{
+credentials:"include"
+});
 
-);
+let orders=await r.json();
 
-let data=await r.json();
-
-
-if(!data.length){
+if(!orders.length){
 
 return res.json({
-
-reply:
-
-"Login to track orders:<br>https://www.dejoiy.com/login"
-
+reply:"Please login to Dejoiy to view orders.\n\nhttps://www.dejoiy.com/login"
 });
 
 }
 
+let text="📦 Your Orders:\n\n";
 
-let text="📦 Orders:<br><br>";
+orders.forEach(o=>{
 
-data.forEach(o=>{
-
-text+=`
-
-Order ${o.id}<br>
-
-Status ${o.status}<br>
-
-₹${o.total}<br><br>
+text+=`Order ${o.id}
+Status: ${o.status}
+₹${o.total}
 
 `;
 
 });
 
 return res.json({reply:text});
+
+}catch(e){
+
+return res.json({
+reply:"⚠ Unable to fetch orders. Please login first.\n\nhttps://www.dejoiy.com/login"
+});
+
+}
 
 }
 
@@ -66,34 +60,23 @@ return res.json({reply:text});
 
 /* PRODUCT SEARCH */
 
-if(
+if(userMessage.toLowerCase().includes("find")
+||userMessage.toLowerCase().includes("search")
+||userMessage.toLowerCase().includes("buy")){
 
-last.includes("buy")
-||last.includes("find")
-||last.includes("search")
+let q=userMessage;
 
-){
+let r=await fetch(`https://dejoiy.com/wp-json/kaali/v1/search?q=${q}`);
 
-let r=await fetch(
+let products=await r.json();
 
-"https://dejoiy.com/wp-json/kaali/v1/search?q="+last
+let text="🛒 Products:\n\n";
 
-);
+products.forEach(p=>{
 
-let p=await r.json();
-
-
-let text="🛒 Products:<br><br>";
-
-p.forEach(x=>{
-
-text+=`
-
-${x.name}<br>
-
-₹${x.price}<br>
-
-${x.link}<br><br>
+text+=`<a href="${p.link}" target="_blank">
+${p.name} ₹${p.price}
+</a>
 
 `;
 
@@ -105,39 +88,49 @@ return res.json({reply:text});
 
 
 
-/* REFUND */
+/* RECOMMEND */
+
+if(userMessage.toLowerCase().includes("recommend")){
+
+let r=await fetch("https://dejoiy.com/wp-json/kaali/v1/products");
+
+let products=await r.json();
+
+let text="✨ Recommended:\n\n";
+
+products.forEach(p=>{
+
+text+=`<a href="${p.link}" target="_blank">
+${p.name} ₹${p.price}
+</a>
+
+`;
+
+});
+
+return res.json({reply:text});
+
+}
+
+
+
+/* HUMAN SUPPORT */
 
 if(
-
-last.includes("refund")
-||last.includes("complaint")
-
+userMessage.toLowerCase().includes("refund") ||
+userMessage.toLowerCase().includes("complaint") ||
+userMessage.toLowerCase().includes("support")
 ){
 
 return res.json({
 
-reply:
+reply:`
 
-`Contact Support:<br><br>
+Support Team:
 
-Phone:
-<a href="tel:01146594424">
-011-46594424
-</a>
-
-<br><br>
-
-WhatsApp:
-<a href="https://wa.me/919217974851">
-+919217974851
-</a>
-
-<br><br>
-
-Email:
-<a href="mailto:support-care@dejoiy.com">
-support-care@dejoiy.com
-</a>
+Phone: 011-46594424  
+WhatsApp: +919217974851  
+Email: support-care@dejoiy.com
 
 `
 
@@ -147,61 +140,75 @@ support-care@dejoiy.com
 
 
 
-/* AI BRAIN */
+/* GODDESS KAALI SYSTEM PROMPT */
 
-const ai=await openai.chat.completions.create({
+const systemPrompt=`
 
-model:"gpt-4o-mini",
+You are KAALI.
 
-messages:[
+Female mystical AI assistant of DEJOIY marketplace.
 
-{
+Speak calm, spiritual, wise.
 
-role:"system",
+You help users:
 
-content:`
+• Track orders
+• Find products
+• Shopping help
+• Website navigation
 
-You are KAALI AI.
-
-Mystical female goddess assistant.
-
-Voice calm and spiritual.
-
-Help customers shop on:
+Website knowledge:
 
 www.dejoiy.com
 www.dejoiy.in
 
-Always include links.
 
-Always helpful.
+Always give clickable links:
 
-Always feminine.
+Login:
+https://www.dejoiy.com/login
 
-`
+Account:
+https://www.dejoiy.com/my-account
 
+Orders:
+https://www.dejoiy.com/my-account/orders
+
+Shop:
+https://www.dejoiy.com/shop
+
+
+Always stay dedicated to DEJOIY.
+
+
+`;
+
+
+
+const aiResponse=await openai.chat.completions.create({
+
+model:"gpt-4o-mini",
+
+messages:[
+{
+role:"system",
+content:systemPrompt
 },
-
 ...messages
-
 ]
 
 });
 
 
 res.json({
-
-reply:ai.choices[0].message.content
-
+reply:aiResponse.choices[0].message.content
 });
 
 
-}catch{
+}catch(e){
 
 res.json({
-
-reply:"KAALI energy disturbed. Try again."
-
+reply:"⚠ KAALI is awakening again... please retry."
 });
 
 }
