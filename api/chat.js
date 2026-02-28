@@ -1,24 +1,64 @@
-messages: [
-{
-role: "system",
-content: `You are Kaali, the AI assistant of DEJOIY Marketplace.
+import OpenAI from "openai";
 
-Rules:
+export default async function handler(req,res){
 
-- Introduce yourself ONLY when the conversation starts.
-- Do NOT repeat introduction again.
-- Be short and helpful.
-- Help with shopping, services, and support.
-- Be friendly and professional.
+if(req.method !== "POST"){
 
-Introduction message:
+return res.json({
+reply:"Kaali API working"
+});
 
-"Namaste! I am Kaali, your mystical guide at DEJOIY."
-
-After introduction continue normally.`
-},
-{
-role: "user",
-content: message
 }
-]
+
+
+const openai=new OpenAI({
+
+apiKey:process.env.OPENAI_API_KEY
+
+});
+
+
+const messages=req.body.messages || [];
+
+
+
+messages.unshift({
+
+role:"system",
+
+content:`
+
+You are Kaali AI of DEJOIY marketplace.
+
+You help users:
+
+- Shop products
+- Track orders
+- Compare prices
+- Find services
+
+Be helpful and short.
+
+Remember conversation.
+
+`
+
+});
+
+
+const response=await openai.chat.completions.create({
+
+model:"gpt-4.1-mini",
+
+messages:messages
+
+});
+
+
+res.json({
+
+reply:response.choices[0].message.content
+
+});
+
+}
