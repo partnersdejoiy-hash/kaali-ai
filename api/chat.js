@@ -1,68 +1,60 @@
 import OpenAI from "openai";
 
+const openai=new OpenAI({
+apiKey:process.env.OPENAI_API_KEY
+});
+
 export default async function handler(req,res){
 
 try{
 
-// Safety check
-if(!req.body){
-return res.json({
-reply:"KAALI ready 🔮"
-});
-}
+let messages=req.body.messages || [];
 
-const messages=req.body.messages || [];
-
-let last="";
-
-if(messages.length>0){
-last=messages[messages.length-1].content.toLowerCase();
-}
+let user=messages[messages.length-1].content.toLowerCase();
 
 
-/* ORDER TRACKING */
 
-if(last.includes("order")){
+/* ORDER TRACK */
 
-try{
+if(user.includes("order")){
 
 let r=await fetch(
-"https://dejoiy.com/wp-json/kaali/v1/orders"
+"https://dejoiy.com/wp-json/kaali/v1/orders",
+{credentials:"include"}
 );
 
 let orders=await r.json();
 
+if(!orders.length)
+return res.json({
+reply:"Please login to view your orders."
+});
+
 let text="📦 Your Orders:\n\n";
 
 orders.forEach(o=>{
-text+="Order "+o.id+
+
+text+=
+
+"Order "+o.id+
 " | "+o.status+
 " | ₹"+o.total+"\n";
+
 });
 
 return res.json({reply:text});
 
-}catch(e){
-
-return res.json({
-reply:"⚠️ Unable to fetch orders"
-});
-
 }
-
-}
-
 
 
 /* PRODUCT SEARCH */
 
-if(last.includes("search")||
-last.includes("find")){
-
-try{
+if(user.includes("search")||user.includes("find")){
 
 let r=await fetch(
-"https://dejoiy.com/wp-json/kaali/v1/search?q="+last
+
+"https://dejoiy.com/wp-json/kaali/v1/search?q="+user
+
 );
 
 let products=await r.json();
@@ -70,32 +62,64 @@ let products=await r.json();
 let text="🛒 Products:\n\n";
 
 products.forEach(p=>{
-text+=p.name+
-" ₹"+p.price+
+
+text+=
+
+p.name+
+"\n₹"+p.price+
 "\n"+p.link+"\n\n";
+
 });
 
 return res.json({reply:text});
 
-}catch(e){
+}
+
+
+/* SUPPORT */
+
+if(
+user.includes("refund")||
+user.includes("complaint")||
+user.includes("support")
+){
 
 return res.json({
-reply:"⚠️ Product search unavailable"
+
+reply:
+
+"📞 Support Team:\n\nPhone: 011-46594424\nWhatsApp: +919217974851\nEmail: support-care@dejoiy.com\n\nOur team will assist you."
+
 });
 
 }
 
-}
 
 
+/* AI */
 
-/* AI RESPONSE */
+const systemPrompt=`
 
-try{
+You are KAALI AI.
 
-const openai=new OpenAI({
-apiKey:process.env.OPENAI_API_KEY
-});
+You are female spiritual guide.
+
+You help customers shop on:
+
+www.dejoiy.com
+www.dejoiy.in
+
+You know everything about Dejoiy.
+
+If something unavailable give references.
+
+Be warm.
+
+Be calm.
+
+Speak like mother goddess.
+
+`;
 
 const ai=await openai.chat.completions.create({
 
@@ -104,49 +128,26 @@ model:"gpt-4o-mini",
 messages:[
 {
 role:"system",
-content:`
-You are KAALI.
-
-Divine female AI assistant of DEJOIY.
-
-Friendly mystical guide.
-
-Help with:
-
-Products
-Orders
-Shopping
-
-Use emojis sometimes 🔮✨
-`
+content:systemPrompt
 },
 ...messages
 ]
 
 });
 
-return res.json({
+
+res.json({
 
 reply:ai.choices[0].message.content
 
 });
 
+
 }catch(e){
 
-return res.json({
+res.json({
 
-reply:"✨ Namaste! I am KAALI. How may I help you today? 🔮"
-
-});
-
-}
-
-
-}catch(error){
-
-return res.json({
-
-reply:"⚠️ KAALI AI restarting..."
+reply:"⚠️ KAALI is unavailable"
 
 });
 
