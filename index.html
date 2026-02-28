@@ -7,6 +7,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- KAALI FAVICON -->
+<link rel="icon" type="image/png" href="kaali.png">
+
 <style>
 
 /* ================= BODY ================= */
@@ -21,6 +24,21 @@ margin:0;
 padding:0;
 
 display:flex;
+justify-content:center;
+
+height:100vh;
+
+}
+
+
+/* ================= MAIN CONTAINER ================= */
+
+.container{
+
+width:100%;
+max-width:900px;
+
+display:flex;
 flex-direction:column;
 
 height:100vh;
@@ -28,13 +46,13 @@ height:100vh;
 }
 
 
-
 /* ================= HEADER ================= */
 
 .header{
 
 text-align:center;
-padding:10px;
+
+padding:15px;
 
 border-bottom:1px solid #222;
 
@@ -43,9 +61,7 @@ border-bottom:1px solid #222;
 
 .logo{
 
-width:80px;
-
-margin-top:5px;
+width:90px;
 
 animation:glow 3s infinite;
 
@@ -55,8 +71,10 @@ animation:glow 3s infinite;
 .title{
 
 color:gold;
-font-size:28px;
-margin:5px;
+
+font-size:30px;
+
+margin-top:5px;
 
 }
 
@@ -70,7 +88,7 @@ flex:1;
 
 overflow:auto;
 
-padding:15px;
+padding:20px;
 
 }
 
@@ -82,11 +100,11 @@ padding:15px;
 
 background:#222;
 
-padding:10px;
+padding:12px;
 
-border-radius:10px;
+border-radius:12px;
 
-margin:6px;
+margin:8px;
 
 animation:fadeIn 0.4s ease;
 
@@ -95,15 +113,15 @@ animation:fadeIn 0.4s ease;
 
 .kaali{
 
-background:#000;
+background:black;
 
 border-left:4px solid gold;
 
-padding:10px;
+padding:12px;
 
-border-radius:10px;
+border-radius:12px;
 
-margin:6px;
+margin:8px;
 
 animation:fadeIn 0.6s ease;
 
@@ -117,7 +135,7 @@ animation:fadeIn 0.6s ease;
 
 display:flex;
 
-padding:10px;
+padding:15px;
 
 border-top:1px solid #222;
 
@@ -126,14 +144,13 @@ background:black;
 }
 
 
-
 input{
 
 flex:1;
 
-padding:12px;
+padding:14px;
 
-border-radius:10px;
+border-radius:12px;
 
 border:none;
 
@@ -151,11 +168,11 @@ background:gold;
 
 border:none;
 
-padding:12px 20px;
+padding:14px 25px;
 
-border-radius:10px;
+border-radius:12px;
 
-margin-left:8px;
+margin-left:10px;
 
 cursor:pointer;
 
@@ -179,7 +196,7 @@ background:#ffd700cc;
 @keyframes glow{
 
 0%{filter:drop-shadow(0px 0px 2px gold);}
-50%{filter:drop-shadow(0px 0px 12px gold);}
+50%{filter:drop-shadow(0px 0px 15px gold);}
 100%{filter:drop-shadow(0px 0px 2px gold);}
 
 }
@@ -206,6 +223,7 @@ transform:translateY(0);
 .typing{
 
 color:gold;
+
 font-style:italic;
 
 animation:pulse 1s infinite;
@@ -223,20 +241,46 @@ animation:pulse 1s infinite;
 
 
 
-/* ================= RESPONSIVE ================= */
+/* ================= SCROLLBAR ================= */
+
+::-webkit-scrollbar{
+
+width:8px;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+background:gold;
+border-radius:10px;
+
+}
+
+
+
+/* ================= MOBILE ================= */
 
 @media(max-width:768px){
 
-.title{
-font-size:22px;
+.container{
+
+max-width:100%;
+
 }
 
 .logo{
-width:60px;
-}
+
+width:70px;
 
 }
 
+.title{
+
+font-size:24px;
+
+}
+
+}
 
 </style>
 
@@ -246,6 +290,8 @@ width:60px;
 
 <body>
 
+
+<div class="container">
 
 
 <!-- HEADER -->
@@ -260,7 +306,7 @@ width:60px;
 
 
 
-<!-- CHAT AREA -->
+<!-- CHAT -->
 
 <div id="messages">
 
@@ -268,7 +314,7 @@ width:60px;
 
 
 
-<!-- INPUT AREA -->
+<!-- INPUT -->
 
 <div class="inputArea">
 
@@ -278,6 +324,8 @@ width:60px;
 
 </div>
 
+
+</div>
 
 
 
@@ -348,7 +396,7 @@ content:msg
 
 
 
-// SHOW TYPING
+// TYPING ANIMATION
 
 document.getElementById("messages").innerHTML+=
 
@@ -409,6 +457,7 @@ box.innerHTML+=
 box.scrollTop=box.scrollHeight;
 
 }
+
 
 
 
