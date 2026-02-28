@@ -16,93 +16,35 @@ messages[messages.length-1]?.content || "";
 const text=userMessage.toLowerCase();
 
 
-/* =================================
-AUTO ORDER TRACKING (Smart)
-================================= */
 
-let orderMatch=userMessage.match(/\d{3,}/);
+/* =========================
+ORDER TRACKING
+========================= */
 
-if(orderMatch){
+if(text.includes("order")){
 
-let orderId=orderMatch[0];
+let r=await fetch("https://dejoiy.com/wp-json/kaali/v1/orders");
 
-let orderUrl=
-`${process.env.WC_URL}/wp-json/wc/v3/orders/${orderId}?consumer_key=${process.env.WC_KEY}&consumer_secret=${process.env.WC_SECRET}`;
+let orders=await r.json();
 
-let orderResponse=await fetch(orderUrl);
-
-let order=await orderResponse.json();
-
-if(order.id){
+if(orders.length==0){
 
 return res.json({
 
-reply:
-`📦 Order #${order.id}
-
-Status: ${order.status}
-
-Total: ₹${order.total}
-
-Customer: ${order.billing.first_name}
-
-Date: ${order.date_created}
-
-🚚 Your order is on the way.`
+reply:"📦 I couldn't find any orders. Please login first."
 
 });
 
 }
 
-}
+let reply="📦 Your Orders:\n\n";
 
+orders.forEach(o=>{
 
-
-/* =================================
-ORDER HELP
-================================= */
-
-if(
-text.includes("order") ||
-text.includes("track")
-){
-
-return res.json({
-
-reply:
-"📦 I can track your order.\n\nPlease type your Order ID.\nExample:\nTrack 1023"
-
-});
-
-}
-
-
-
-/* =================================
-SMART PRODUCT SEARCH
-================================= */
-
-if(
-text.includes("search") ||
-text.includes("find") ||
-text.includes("buy") ||
-text.includes("product")
-){
-
-let url=
-`${process.env.WC_URL}/wp-json/wc/v3/products?per_page=5&consumer_key=${process.env.WC_KEY}&consumer_secret=${process.env.WC_SECRET}`;
-
-let response=await fetch(url);
-
-let products=await response.json();
-
-let reply="🛍️ Here are some products:\n\n";
-
-products.forEach(p=>{
-
-reply+=`• ${p.name}
-₹${p.price}
-${p.permalink}
+reply+=`Order #${o.id}
+Status: ${o.status}
+Total: ₹${o.total}
+Date: ${o.date}
 
 `;
 
@@ -114,29 +56,70 @@ return res.json({reply});
 
 
 
-/* =================================
-RECOMMENDATION ENGINE
-================================= */
+/* =========================
+PRODUCT SEARCH
+========================= */
+
+if(
+text.includes("find") ||
+text.includes("search") ||
+text.includes("buy") ||
+text.includes("product")
+){
+
+let q=text.replace("search","").replace("find","");
+
+let r=await fetch(
+
+`https://dejoiy.com/wp-json/kaali/v1/search?q=${q}`
+
+);
+
+let products=await r.json();
+
+let reply="🛒 Here are some products:\n\n";
+
+products.forEach(p=>{
+
+reply+=`${p.name}
+₹${p.price}
+${p.link}
+
+`;
+
+});
+
+return res.json({reply});
+
+}
+
+
+
+/* =========================
+AUTO RECOMMEND PRODUCTS
+========================= */
 
 if(
 text.includes("recommend") ||
-text.includes("suggest")
+text.includes("suggest") ||
+text.includes("best")
 ){
 
-let url=
-`${process.env.WC_URL}/wp-json/wc/v3/products?per_page=5&consumer_key=${process.env.WC_KEY}&consumer_secret=${process.env.WC_SECRET}`;
+let r=await fetch(
 
-let response=await fetch(url);
+"https://dejoiy.com/wp-json/kaali/v1/products"
 
-let products=await response.json();
+);
+
+let products=await r.json();
 
 let reply="✨ Recommended for you:\n\n";
 
 products.forEach(p=>{
 
-reply+=`• ${p.name}
+reply+=`${p.name}
 ₹${p.price}
-${p.permalink}
+${p.link}
 
 `;
 
@@ -148,16 +131,50 @@ return res.json({reply});
 
 
 
-/* =================================
-ADD TO CART AI
-================================= */
+/* =========================
+AI CART BUILDER
+========================= */
 
-if(text.includes("add to cart")){
+if(
+text.includes("add") ||
+text.includes("cart")
+){
+
+let r=await fetch(
+
+"https://dejoiy.com/wp-json/kaali/v1/products"
+
+);
+
+let products=await r.json();
+
+let product=products[0];
+
+await fetch(
+
+"https://dejoiy.com/wp-json/kaali/v1/add-to-cart",
+
+{
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+product_id:product.id
+
+})
+
+}
+
+);
 
 return res.json({
 
 reply:
-"🛒 I will help you add products to cart.\n\nPlease send product name."
+"🛒 I added a product to your cart.\n\nYou can checkout now."
 
 });
 
@@ -165,33 +182,60 @@ reply:
 
 
 
-/* =================================
+/* =========================
+CHECKOUT ASSISTANT
+========================= */
+
+if(
+text.includes("checkout") ||
+text.includes("payment")
+){
+
+return res.json({
+
+reply:
+"💳 You can complete your order here:\n\nhttps://dejoiy.com/cart\n\nI will guide you if needed ✨"
+
+});
+
+}
+
+
+
+/* =========================
 SMART AI BRAIN
-================================= */
+========================= */
 
 const systemPrompt=`
 
-You are KAALI AI of DEJOIY marketplace.
+You are KAALI AI.
 
-You help users:
+Mystical female shopping assistant of DEJOIY.
 
-• Find products
-• Track orders
+Personality:
+
+• Female guide
+• Smart
+• Helpful
+• Friendly
+• Mystical tone
+
+Capabilities:
+
 • Recommend products
-• Shopping help
-• Services help
+• Track orders
+• Add items to cart
+• Help checkout
+• Compare products
 
-Rules:
+Speak like a friendly female assistant.
 
-- Speak friendly
-- Use emojis sometimes ✨🛍️📦
-- Short answers
-- Reply in user's language
-- Help customer buy products
+Use emojis sometimes ✨🛍️📦🔮
 
-DEJOIY is an AI powered marketplace.
+Reply in user's language.
 
 `;
+
 
 
 const aiResponse=await openai.chat.completions.create({
@@ -215,12 +259,11 @@ reply:aiResponse.choices[0].message.content
 
 });
 
-
 }catch(e){
 
 res.json({
 
-reply:"⚠️ KAALI could not fetch data. Please try again."
+reply:"⚠️ KAALI AI is temporarily unavailable."
 
 });
 
