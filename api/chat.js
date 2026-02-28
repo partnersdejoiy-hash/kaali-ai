@@ -1,21 +1,30 @@
 import OpenAI from "openai";
 
-const openai=new OpenAI({
-apiKey:process.env.OPENAI_API_KEY
-});
-
 export default async function handler(req,res){
 
-const messages=req.body.messages||[];
+try{
 
-const last=messages[messages.length-1]?.content||"";
+// Safety check
+if(!req.body){
+return res.json({
+reply:"KAALI ready 🔮"
+});
+}
 
-const text=last.toLowerCase();
+const messages=req.body.messages || [];
+
+let last="";
+
+if(messages.length>0){
+last=messages[messages.length-1].content.toLowerCase();
+}
 
 
-/* ===== ORDERS ===== */
+/* ORDER TRACKING */
 
-if(text.includes("order")){
+if(last.includes("order")){
+
+try{
 
 let r=await fetch(
 "https://dejoiy.com/wp-json/kaali/v1/orders"
@@ -23,105 +32,124 @@ let r=await fetch(
 
 let orders=await r.json();
 
-let reply="📦 Your Orders:\n\n";
+let text="📦 Your Orders:\n\n";
 
 orders.forEach(o=>{
-
-reply+=
-"Order "+o.id+
+text+="Order "+o.id+
 " | "+o.status+
 " | ₹"+o.total+"\n";
-
 });
 
-return res.json({reply});
+return res.json({reply:text});
+
+}catch(e){
+
+return res.json({
+reply:"⚠️ Unable to fetch orders"
+});
+
+}
 
 }
 
 
-/* ===== PRODUCT SEARCH ===== */
 
-if(
-text.includes("search")||
-text.includes("find")||
-text.includes("buy")
-){
+/* PRODUCT SEARCH */
+
+if(last.includes("search")||
+last.includes("find")){
+
+try{
 
 let r=await fetch(
-
-"https://dejoiy.com/wp-json/kaali/v1/search?q="+text
-
+"https://dejoiy.com/wp-json/kaali/v1/search?q="+last
 );
 
 let products=await r.json();
 
-if(products.length>0){
-
-let reply="🛒 Available on DEJOIY:\n\n";
+let text="🛒 Products:\n\n";
 
 products.forEach(p=>{
-
-reply+=
-p.name+" ₹"+p.price+
+text+=p.name+
+" ₹"+p.price+
 "\n"+p.link+"\n\n";
-
 });
 
-return res.json({reply});
+return res.json({reply:text});
 
-}
-
-
-/* ===== OUTSIDE REFERENCES ===== */
+}catch(e){
 
 return res.json({
-
-reply:
-
-"🔮 I couldn't find this on DEJOIY.\n\nTry here:\n\nAmazon:\nhttps://www.amazon.in/s?k="+text+"\n\nFlipkart:\nhttps://www.flipkart.com/search?q="+text
-
+reply:"⚠️ Product search unavailable"
 });
 
 }
 
+}
 
-/* ===== AI BRAIN ===== */
 
-const system=`
 
-You are KAALI.
+/* AI RESPONSE */
 
-Divine mystical female AI assistant.
+try{
 
-You know everything.
-
-You help customers shop.
-
-You track orders.
-
-You suggest products.
-
-You guide checkout.
-
-Speak like a divine female guide.
-
-Use emojis sometimes 🔮✨🛍️
-
-`;
+const openai=new OpenAI({
+apiKey:process.env.OPENAI_API_KEY
+});
 
 const ai=await openai.chat.completions.create({
 
 model:"gpt-4o-mini",
 
 messages:[
-{role:"system",content:system},
+{
+role:"system",
+content:`
+You are KAALI.
+
+Divine female AI assistant of DEJOIY.
+
+Friendly mystical guide.
+
+Help with:
+
+Products
+Orders
+Shopping
+
+Use emojis sometimes 🔮✨
+`
+},
 ...messages
 ]
 
 });
 
-res.json({
+return res.json({
+
 reply:ai.choices[0].message.content
+
 });
+
+}catch(e){
+
+return res.json({
+
+reply:"✨ Namaste! I am KAALI. How may I help you today? 🔮"
+
+});
+
+}
+
+
+}catch(error){
+
+return res.json({
+
+reply:"⚠️ KAALI AI restarting..."
+
+});
+
+}
 
 }
