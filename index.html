@@ -1,23 +1,87 @@
-import OpenAI from "openai";
+<!DOCTYPE html>
+<html>
 
-const client = new OpenAI({
-apiKey: process.env.OPENAI_API_KEY,
-});
+<head>
+<title>Kaali AI</title>
 
-export default async function handler(req,res){
+<style>
 
-const message=req.body.message;
+body{
+font-family:Arial;
+text-align:center;
+margin-top:50px;
+}
 
-const response=await client.responses.create({
+#chat{
+width:400px;
+margin:auto;
+border:1px solid gray;
+padding:20px;
+border-radius:10px;
+}
 
-model:"gpt-4.1-mini",
+input{
+width:70%;
+padding:10px;
+}
 
-input:message
+button{
+padding:10px;
+background:black;
+color:white;
+border:none;
+}
 
-});
+</style>
 
-res.json({
-reply:response.output_text
+</head>
+
+<body>
+
+<h2>Kaali AI Assistant</h2>
+
+<div id="chat">
+
+<input id="input" placeholder="Ask Kaali..." />
+
+<button onclick="send()">Send</button>
+
+<div id="messages"></div>
+
+</div>
+
+<script>
+
+async function send(){
+
+let msg=document.getElementById("input").value;
+
+let res=await fetch("/api/chat",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+message:msg
 })
 
+});
+
+let data=await res.json();
+
+document.getElementById("messages").innerHTML+=
+"<p><b>You:</b> "+msg+"</p>";
+
+document.getElementById("messages").innerHTML+=
+"<p><b>Kaali:</b> "+data.reply+"</p>";
+
 }
+
+</script>
+
+</body>
+
+</html>
