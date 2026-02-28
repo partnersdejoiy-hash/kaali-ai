@@ -1,35 +1,42 @@
 import OpenAI from "openai";
 
+export const config = {
+  runtime: "nodejs"
+};
+
 export default async function handler(req, res) {
 
-try {
+  if (req.method !== "POST") {
+    return res.status(200).json({
+      reply: "Kaali API ready"
+    });
+  }
 
-const client = new OpenAI({
-apiKey: process.env.OPENAI_API_KEY
-});
+  try {
 
-const message = req.body?.message || "Hello";
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
 
-const completion = await client.chat.completions.create({
-model: "gpt-4.1-mini",
-messages:[
-{
-role:"user",
-content:message
-}
-]
-});
+    const message = req.body.message || "Hello";
 
-res.status(200).json({
-reply: completion.choices[0].message.content
-});
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        { role: "user", content: message }
+      ]
+    });
 
-} catch(error){
+    res.status(200).json({
+      reply: completion.choices[0].message.content
+    });
 
-res.status(200).json({
-reply:"Kaali is waking up... Try again."
-});
+  } catch (error) {
 
-}
+    res.status(200).json({
+      reply: "Kaali is waking up..."
+    });
+
+  }
 
 }
