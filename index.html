@@ -1,271 +1,152 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
 <title>KAALI AI</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <link rel="icon" href="kaali.png">
-
 <style>
-
-html,body{
-margin:0;
-height:100%;
-background:black;
-color:white;
-font-family:Arial;
-overflow:hidden;
+html, body {
+ margin: 0;
+ padding: 0;
+ background: black;
+ color: white;
+ font-family: Arial;
+ height: 100%;
+ overflow: hidden;
 }
-
-/* Container */
-
-.container{
-height:100%;
-display:flex;
-flex-direction:column;
+.container {
+ display: flex;
+ flex-direction: column;
+ height: 100%;
+ width: 100%;
 }
-
-/* Header */
-
-.header{
-text-align:center;
-padding:10px;
-border-bottom:1px solid #222;
+.header {
+ text-align: center;
+ padding: 10px;
+ border-bottom: 1px solid #222;
 }
-
-.logo{
-width:60px;
+.logo { width: 60px; animation: glow 3s infinite; }
+.title { color: gold; font-size: 20px; }
+#messages {
+ flex: 1;
+ overflow-y: auto;
+ padding: 10px;
 }
-
-.title{
-color:gold;
-font-size:20px;
+.user { background: #222; padding: 10px; margin: 6px; border-radius: 10px; }
+.kaali { background:black; border-left:4px solid gold; padding:10px; margin:6px; border-radius:10px; }
+.kaali a { color: #3cc6ff; font-weight: bold; text-decoration: none; }
+.inputArea {
+ display: flex;
+ padding: 10px;
+ border-top: 1px solid #222;
 }
-
-/* Chat */
-
-#messages{
-flex:1;
-overflow:auto;
-padding:10px;
+input {
+ flex: 1;
+ padding: 10px;
+ border-radius: 10px;
+ border: none;
+ font-size: 16px;
 }
-
-/* Messages */
-
-.user{
-background:#222;
-padding:10px;
-margin:6px;
-border-radius:10px;
+button {
+ background: gold;
+ border: none;
+ padding: 10px 16px;
+ margin-left: 6px;
+ border-radius: 10px;
+ cursor: pointer;
+ font-weight: bold;
 }
-
-.kaali{
-background:black;
-border-left:4px solid gold;
-padding:10px;
-margin:6px;
-border-radius:10px;
+@keyframes glow {
+ 0%{filter:drop-shadow(0 0 2px gold);}
+ 50%{filter:drop-shadow(0 0 12px gold);}
+ 100%{filter:drop-shadow(0 0 2px gold);}
 }
-
-/* Input */
-
-.inputArea{
-display:flex;
-padding:10px;
-border-top:1px solid #222;
-}
-
-input{
-flex:1;
-padding:10px;
-border-radius:10px;
-border:none;
-}
-
-button{
-background:gold;
-border:none;
-padding:10px;
-margin-left:6px;
-border-radius:10px;
-cursor:pointer;
-}
-
 </style>
-
 </head>
-
 <body>
 
 <div class="container">
+ <div class="header">
+   <img src="kaali.png" class="logo">
+   <div class="title">KAALI AI</div>
+ </div>
 
-<div class="header">
+ <div id="messages"></div>
 
-<img src="kaali.png" class="logo">
-
-<div class="title">KAALI AI</div>
-
+ <div class="inputArea">
+   <input id="input" placeholder="Ask KAALI anything...">
+   <button onclick="send()">Send</button>
+   <button onclick="startVoice()">🎤</button>
+   <button onclick="speakLast()">🔊</button>
+ </div>
 </div>
-
-<div id="messages"></div>
-
-<div class="inputArea">
-
-<input id="input" placeholder="Ask KAALI anything">
-
-<button onclick="send()">Send</button>
-
-<button onclick="startVoice()">🎤</button>
-
-<button onclick="speakLast()">🔊</button>
-
-</div>
-
-</div>
-
 
 <script>
-
-/* Greeting */
-
-let history=[{
-
-role:"assistant",
-
-content:"✨ Namaste. I am KAALI — the mystical guide of DEJOIY. How may I assist you?"
-
+let history = [{
+ role:"assistant",
+ content:"✨ Namaste! I am KAALI — your divine guide at DEJOIY. How may I assist you today?"
 }];
+let lastReply="";
 
-
-document.getElementById("messages").innerHTML=
-
-"<div class='kaali'>✨ Namaste. I am KAALI — the mystical guide of DEJOIY. How may I assist you?</div>";
-
-
+document.getElementById("messages").innerHTML =
+ "<div class='kaali'>✨ Namaste! I am KAALI — your divine guide at DEJOIY. How may I assist you today?</div>";
 
 async function send(){
+ let input = document.getElementById("input");
+ let msg = input.value.trim(); if(!msg) return;
+ input.value="";
+ let box = document.getElementById("messages");
 
-let input=document.getElementById("input");
+ box.innerHTML += `<div class='user'>${msg}</div>`;
+ history.push({role:"user",content:msg});
+ box.innerHTML += `<div class='kaali'>KAALI is thinking...</div>`;
+ box.scrollTop = box.scrollHeight;
 
-let msg=input.value;
+ let res = await fetch("/api/chat",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({messages:history})
+ });
+ let data = await res.json();
 
-if(!msg) return;
+ box.removeChild(box.lastChild);
+ lastReply = data.reply;
+ history.push({role:"assistant",content:data.reply});
 
-input.value="";
+ let replyHTML = data.reply.replace(
+   /https:\/\/[^\s]+/g,
+   url => `<a href="${url}" target="_blank">${url}</a>`
+ );
 
-
-let box=document.getElementById("messages");
-
-
-box.innerHTML+=
-
-"<div class='user'>"+msg+"</div>";
-
-
-history.push({
-
-role:"user",
-content:msg
-
-});
-
-
-box.innerHTML+=
-
-"<div class='kaali'>KAALI is thinking...</div>";
-
-box.scrollTop=999999;
-
-
-let res=await fetch("/api/chat",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-messages:history
-
-})
-
-});
-
-
-let data=await res.json();
-
-
-box.removeChild(box.lastChild);
-
-
-history.push({
-
-role:"assistant",
-content:data.reply
-
-});
-
-
-box.innerHTML+=
-
-"<div class='kaali'>"+data.reply+"</div>";
-
-box.scrollTop=999999;
-
+ box.innerHTML += `<div class='kaali'>${replyHTML}</div>`;
+ box.scrollTop = box.scrollHeight;
 }
 
+// Enter key
+document.getElementById("input").addEventListener("keydown", e=>{
+ if(e.key==="Enter") send();
+});
 
-/* Voice */
-
-function speak(text){
-
-let t=text.replace(/[^\w\s]/gi,'');
-
-let u=new SpeechSynthesisUtterance(t);
-
-u.rate=0.9;
-u.pitch=1.3;
-
-speechSynthesis.speak(u);
-
-}
-
-
+// Voice play
 function speakLast(){
-
-let last=history[history.length-1].content;
-
-speak(last);
-
+ let text = lastReply.replace(/[^\w\s.,]/gi,'');
+ let s = new SpeechSynthesisUtterance(text);
+ s.rate = 0.9; s.pitch = 1.3;
+ let voices = speechSynthesis.getVoices();
+ s.voice = voices.find(v=>v.name.includes("Female"))||voices[1];
+ speechSynthesis.speak(s);
 }
 
-
-/* Voice input */
-
+// Voice input
 function startVoice(){
-
-let rec=new webkitSpeechRecognition();
-
-rec.lang="en-IN";
-
-rec.onresult=e=>{
-
-document.getElementById("input").value=
-e.results[0][0].transcript;
-
-};
-
-rec.start();
-
+ let rec = new webkitSpeechRecognition();
+ rec.lang="en-IN";
+ rec.onresult = e=>{
+   document.getElementById("input").value = e.results[0][0].transcript;
+ };
+ rec.start();
 }
-
 </script>
 
 </body>
-
 </html>
