@@ -1,152 +1,310 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
 <title>KAALI AI</title>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <link rel="icon" href="kaali.png">
+
 <style>
-html, body {
- margin: 0;
- padding: 0;
- background: black;
- color: white;
- font-family: Arial;
- height: 100%;
- overflow: hidden;
+
+html,body{
+margin:0;
+padding:0;
+background:black;
+color:white;
+font-family:Arial;
+height:100%;
+overflow:hidden;
+display:flex;
+justify-content:center;
 }
-.container {
- display: flex;
- flex-direction: column;
- height: 100%;
- width: 100%;
+
+/* Container */
+
+.container{
+width:100%;
+max-width:420px;
+height:100%;
+display:flex;
+flex-direction:column;
 }
-.header {
- text-align: center;
- padding: 10px;
- border-bottom: 1px solid #222;
+
+/* Header */
+
+.header{
+text-align:center;
+padding:10px;
+border-bottom:1px solid #222;
 }
-.logo { width: 60px; animation: glow 3s infinite; }
-.title { color: gold; font-size: 20px; }
-#messages {
- flex: 1;
- overflow-y: auto;
- padding: 10px;
+
+.logo{
+width:70px;
+animation:glow 3s infinite;
 }
-.user { background: #222; padding: 10px; margin: 6px; border-radius: 10px; }
-.kaali { background:black; border-left:4px solid gold; padding:10px; margin:6px; border-radius:10px; }
-.kaali a { color: #3cc6ff; font-weight: bold; text-decoration: none; }
-.inputArea {
- display: flex;
- padding: 10px;
- border-top: 1px solid #222;
+
+.title{
+color:gold;
+font-size:22px;
 }
-input {
- flex: 1;
- padding: 10px;
- border-radius: 10px;
- border: none;
- font-size: 16px;
+
+/* Messages */
+
+#messages{
+flex:1;
+overflow:auto;
+padding:10px;
 }
-button {
- background: gold;
- border: none;
- padding: 10px 16px;
- margin-left: 6px;
- border-radius: 10px;
- cursor: pointer;
- font-weight: bold;
+
+.user{
+background:#222;
+padding:10px;
+border-radius:12px;
+margin:6px;
+animation:fade .3s;
 }
-@keyframes glow {
- 0%{filter:drop-shadow(0 0 2px gold);}
- 50%{filter:drop-shadow(0 0 12px gold);}
- 100%{filter:drop-shadow(0 0 2px gold);}
+
+.kaali{
+background:black;
+border-left:4px solid gold;
+padding:10px;
+border-radius:12px;
+margin:6px;
+animation:fade .5s;
 }
+
+/* Input */
+
+.inputArea{
+display:flex;
+padding:10px;
+border-top:1px solid #222;
+}
+
+input{
+flex:1;
+padding:12px;
+border-radius:10px;
+border:none;
+font-size:15px;
+}
+
+button{
+background:gold;
+border:none;
+padding:10px 15px;
+border-radius:10px;
+margin-left:5px;
+cursor:pointer;
+font-weight:bold;
+}
+
+/* Recording */
+
+.recording{
+color:red;
+font-size:12px;
+margin-left:10px;
+animation:pulse 1s infinite;
+}
+
+/* Animations */
+
+@keyframes glow{
+0%{filter:drop-shadow(0 0 2px gold);}
+50%{filter:drop-shadow(0 0 12px gold);}
+100%{filter:drop-shadow(0 0 2px gold);}
+}
+
+@keyframes pulse{
+0%{opacity:.3}
+50%{opacity:1}
+100%{opacity:.3}
+}
+
+@keyframes fade{
+from{opacity:0;transform:translateY(10px);}
+to{opacity:1;}
+}
+
 </style>
+
 </head>
+
 <body>
 
 <div class="container">
- <div class="header">
-   <img src="kaali.png" class="logo">
-   <div class="title">KAALI AI</div>
- </div>
 
- <div id="messages"></div>
+<div class="header">
 
- <div class="inputArea">
-   <input id="input" placeholder="Ask KAALI anything...">
-   <button onclick="send()">Send</button>
-   <button onclick="startVoice()">🎤</button>
-   <button onclick="speakLast()">🔊</button>
- </div>
+<img src="kaali.png" class="logo">
+
+<div class="title">KAALI AI</div>
+
+</div>
+
+<div id="messages"></div>
+
+<div class="inputArea">
+
+<input id="input" placeholder="Ask KAALI anything...">
+
+<button onclick="send()">Send</button>
+
+<button onclick="startVoice()">🎤</button>
+
+<button onclick="speakLast()">🔊</button>
+
+<span id="rec" class="recording" style="display:none">
+● Recording...
+</span>
+
+</div>
+
 </div>
 
 <script>
-let history = [{
- role:"assistant",
- content:"✨ Namaste! I am KAALI — your divine guide at DEJOIY. How may I assist you today?"
-}];
+
+let history=[];
+
 let lastReply="";
 
-document.getElementById("messages").innerHTML =
- "<div class='kaali'>✨ Namaste! I am KAALI — your divine guide at DEJOIY. How may I assist you today?</div>";
+/* Greeting */
+
+let greet="✨ Namaste! I am KAALI — your mystical guide at DEJOIY. How may I assist you today? 🔮";
+
+document.getElementById("messages").innerHTML=
+
+"<div class='kaali'>"+greet+"</div>";
+
+history.push({role:"assistant",content:greet});
+
+/* Send */
 
 async function send(){
- let input = document.getElementById("input");
- let msg = input.value.trim(); if(!msg) return;
- input.value="";
- let box = document.getElementById("messages");
 
- box.innerHTML += `<div class='user'>${msg}</div>`;
- history.push({role:"user",content:msg});
- box.innerHTML += `<div class='kaali'>KAALI is thinking...</div>`;
- box.scrollTop = box.scrollHeight;
+let input=document.getElementById("input");
 
- let res = await fetch("/api/chat",{
-   method:"POST",
-   headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({messages:history})
- });
- let data = await res.json();
+let msg=input.value.trim();
 
- box.removeChild(box.lastChild);
- lastReply = data.reply;
- history.push({role:"assistant",content:data.reply});
+if(!msg) return;
 
- let replyHTML = data.reply.replace(
-   /https:\/\/[^\s]+/g,
-   url => `<a href="${url}" target="_blank">${url}</a>`
- );
+input.value="";
 
- box.innerHTML += `<div class='kaali'>${replyHTML}</div>`;
- box.scrollTop = box.scrollHeight;
-}
+let box=document.getElementById("messages");
 
-// Enter key
-document.getElementById("input").addEventListener("keydown", e=>{
- if(e.key==="Enter") send();
+box.innerHTML+=
+"<div class='user'>"+msg+"</div>";
+
+history.push({role:"user",content:msg});
+
+box.innerHTML+=
+"<div class='kaali'>KAALI is thinking 🔮</div>";
+
+let res=await fetch("/api/chat",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({messages:history})
+
 });
 
-// Voice play
-function speakLast(){
- let text = lastReply.replace(/[^\w\s.,]/gi,'');
- let s = new SpeechSynthesisUtterance(text);
- s.rate = 0.9; s.pitch = 1.3;
- let voices = speechSynthesis.getVoices();
- s.voice = voices.find(v=>v.name.includes("Female"))||voices[1];
- speechSynthesis.speak(s);
+let data=await res.json();
+
+box.removeChild(box.lastChild);
+
+history.push({
+
+role:"assistant",
+
+content:data.reply
+
+});
+
+lastReply=data.reply;
+
+box.innerHTML+=
+"<div class='kaali'>"+data.reply+"</div>";
+
+box.scrollTop=box.scrollHeight;
+
 }
 
-// Voice input
+
+/* ENTER KEY */
+
+document.getElementById("input")
+
+.addEventListener("keydown",e=>{
+
+if(e.key==="Enter") send();
+
+});
+
+
+/* Voice Input */
+
 function startVoice(){
- let rec = new webkitSpeechRecognition();
- rec.lang="en-IN";
- rec.onresult = e=>{
-   document.getElementById("input").value = e.results[0][0].transcript;
- };
- rec.start();
+
+let rec=document.getElementById("rec");
+
+rec.style.display="inline";
+
+let speech=new webkitSpeechRecognition();
+
+speech.lang="en-IN";
+
+speech.start();
+
+speech.onresult=function(e){
+
+rec.style.display="none";
+
+document.getElementById("input").value=
+e.results[0][0].transcript;
+
+send();
+
+};
+
+speech.onerror=function(){
+
+rec.style.display="none";
+
+};
+
 }
+
+
+/* Goddess Voice */
+
+function speakLast(){
+
+if(!lastReply) return;
+
+let clean=lastReply.replace(/[✨🔮😊📦🛒]/g,"");
+
+let speech=new SpeechSynthesisUtterance(clean);
+
+speech.pitch=1.3;
+
+speech.rate=.9;
+
+speech.lang="en-IN";
+
+speechSynthesis.speak(speech);
+
+}
+
 </script>
 
 </body>
+
 </html>
