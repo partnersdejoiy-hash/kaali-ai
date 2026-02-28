@@ -1,130 +1,14 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-
-<title>Kaali AI - DEJOIY</title>
-
-<style>
-
-body{
-margin:0;
-font-family:Arial;
-background:black;
-color:#FFD700;
-text-align:center;
-}
-
-/* Logo */
-
-#logo{
-
-margin-top:40px;
-width:160px;
-
-}
-
-/* Title */
-
-h1{
-
-font-size:40px;
-margin-top:10px;
-}
-
-/* Chat Box */
-
-#chatbox{
-
-width:420px;
-margin:auto;
-margin-top:30px;
-
-background:#111;
-
-border-radius:20px;
-
-padding:20px;
-
-box-shadow:0px 0px 40px rgba(255,215,0,0.3);
-
-}
-
-/* Input */
-
-input{
-
-width:70%;
-
-padding:12px;
-
-border-radius:10px;
-
-border:none;
-
-}
-
-/* Button */
-
-button{
-
-padding:12px 20px;
-
-background:#FFD700;
-
-border:none;
-
-border-radius:10px;
-
-color:black;
-
-font-weight:bold;
-
-}
-
-/* Messages */
-
-#messages{
-
-margin-top:20px;
-
-text-align:left;
-
-max-height:300px;
-
-overflow:auto;
-
-color:white;
-
-}
-
-</style>
-
-</head>
-
-<body>
-
-<img id="logo" src="kaali.png">
-
-<h1>KAALI AI</h1>
-
-<div id="chatbox">
-
-<input id="input" placeholder="Ask Kaali anything..." />
-
-<button onclick="send()">Send</button>
-
-<div id="messages"></div>
-
-</div>
-
-<script>
-
 async function send(){
 
-let msg=document.getElementById("input").value;
+let input = document.getElementById("input");
 
-let res=await fetch("/api/chat",{
+let msg = input.value;
+
+if(!msg) return;
+
+input.value="";
+
+let res = await fetch("/api/chat",{
 
 method:"POST",
 
@@ -138,7 +22,7 @@ message:msg
 
 });
 
-let data=await res.json();
+let data = await res.json();
 
 document.getElementById("messages").innerHTML+=
 "<p><b>You:</b> "+msg+"</p>";
@@ -148,8 +32,15 @@ document.getElementById("messages").innerHTML+=
 
 }
 
-</script>
 
-</body>
+// ENTER KEY
 
-</html>
+document.getElementById("input").addEventListener("keydown", function(e){
+
+if(e.key === "Enter"){
+
+send();
+
+}
+
+});
