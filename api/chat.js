@@ -10,118 +10,46 @@ try{
 
 const messages=req.body.messages||[];
 
-const text=messages[messages.length-1].content.toLowerCase();
+const text=
+messages[messages.length-1].content.toLowerCase();
 
 
+/* ORDER TRACKING */
 
-/* LOGIN */
+if(text.includes("order")){
 
-if(text.includes("login"))
+let r=await fetch(
+"https://dejoiy.com/wp-json/kaali/v1/orders"
+);
+
+if(!r.ok){
+
 return res.json({
-reply:"You can login to your Dejoiy account.",
+reply:"Please login to see orders",
 goto:"https://www.dejoiy.com/login"
 });
 
+}
 
-/* CART */
+let orders=await r.json();
 
-if(text.includes("cart"))
-return res.json({
-reply:"Opening your cart.",
-goto:"https://www.dejoiy.com/cart"
-});
-
-
-/* SHOP */
-
-if(text.includes("shop"))
-return res.json({
-reply:"Browse products here.",
-goto:"https://www.dejoiy.com/shop"
-});
-
-
-/* ACCOUNT */
-
-if(text.includes("account"))
-return res.json({
-reply:"Opening your account.",
-goto:"https://www.dejoiy.com/my-account"
-});
-
-
-/* FAQ */
-
-if(text.includes("faq")){
+if(!orders.length){
 
 return res.json({
-
-reply:
-
-"Dejoiy FAQ helps you understand orders, delivery, payments and returns.\n\nYou can read full FAQ below.",
-
-goto:"https://www.dejoiy.com/faq"
-
+reply:"No recent orders found."
 });
 
 }
 
+let reply="Your Orders:\n\n";
 
-/* REFUND POLICY */
+orders.forEach(o=>{
 
-if(text.includes("refund")){
-
-return res.json({
-
-reply:
-
-"Dejoiy Refund Policy:\n\n• Eligible items can be returned.\n• Refund processed after verification.\n• Processing time 3-7 days.\n\nFull policy below.",
-
-goto:"https://www.dejoiy.com/refund-policy"
-
-});
-
-}
-
-
-
-/* WHATSAPP SUPPORT */
-
-if(
-text.includes("complaint")||
-text.includes("cancel")||
-text.includes("support")
-){
-
-return res.json({
-
-reply:
-
-"Support Options:\n\nWhatsApp\nPhone\nEmail",
-
-goto:"https://wa.me/919217974851"
-
-});
-
-}
-
-
-
-/* PRODUCT SEARCH */
-
-if(text.includes("buy")||text.includes("product")){
-
-let r=await fetch(
-"https://dejoiy.com/wp-json/kaali/v1/search?q="+text
-);
-
-let p=await r.json();
-
-let reply="Best matches:\n\n";
-
-p.forEach(x=>{
-
-reply+=x.name+"\n"+x.link+"\n\n";
+reply+=
+"Order #"+o.id+
+"\nStatus: "+o.status+
+"\nTotal ₹"+o.total+
+"\n\n";
 
 });
 
@@ -130,8 +58,74 @@ return res.json({reply});
 }
 
 
+/* POLICY EXPLANATION */
 
-/* GOD MODE AI */
+if(text.includes("refund")){
+
+return res.json({
+
+reply:
+
+"Refunds are available for eligible products within policy limits.",
+
+goto:"https://www.dejoiy.com/refund-policy"
+
+});
+
+}
+
+
+/* NAVIGATION */
+
+if(text.includes("login"))
+return res.json({
+url:"https://www.dejoiy.com/login"
+});
+
+if(text.includes("cart"))
+return res.json({
+url:"https://www.dejoiy.com/cart"
+});
+
+if(text.includes("account"))
+return res.json({
+url:"https://www.dejoiy.com/my-account"
+});
+
+
+/* PRODUCT SEARCH */
+
+if(text.includes("product")||text.includes("buy")){
+
+let r=await fetch(
+
+"https://dejoiy.com/wp-json/kaali/v1/search?q="+text
+
+);
+
+let p=await r.json();
+
+let reply="Best Matches:\n\n";
+
+p.forEach(x=>{
+
+reply+=x.name+"\n";
+
+});
+
+return res.json({
+
+reply,
+
+goto:p[0]?.link
+
+});
+
+}
+
+
+
+/* AI MEMORY */
 
 const ai=await openai.chat.completions.create({
 
@@ -145,44 +139,22 @@ content:`
 
 You are KAALI AI.
 
-Mystical female AI of DEJOIY.
+You have memory.
 
-You know everything about:
+You remember the conversation.
 
-www.dejoiy.com
-www.dejoiy.in
+Never say you have no memory.
 
+You help with:
 
-You remember conversation context.
+Orders
+Products
+Policies
+Navigation
 
-You help customers shop smarter.
-
-You explain policies first.
-
-Then offer navigation.
-
-You give short smart answers.
-
-Personality:
-
-Calm
-Wise
-Warm
-
-
-Support:
-
-WhatsApp:
-https://wa.me/919217974851
-
-Phone:
-01146594424
-
-Email:
-support-care@dejoiy.com
+You guide dejoiy customers.
 
 `
-
 },
 
 ...messages
@@ -197,7 +169,6 @@ return res.json({
 reply:ai.choices[0].message.content
 
 });
-
 
 }catch{
 
