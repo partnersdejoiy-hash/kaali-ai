@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <title>KAALI AI</title>
@@ -19,20 +20,15 @@ font-family:Arial;
 height:100%;
 }
 
-/* Auto resize for widget vs fullpage */
+/* Adaptive Layout */
 
 .container{
-
 width:100%;
 max-width:900px;
-
 height:100%;
-
 margin:auto;
-
 display:flex;
 flex-direction:column;
-
 }
 
 /* Header */
@@ -46,7 +42,6 @@ border-bottom:1px solid #222;
 .logo{
 width:70px;
 animation:glow 3s infinite;
-cursor:pointer;
 }
 
 .title{
@@ -57,30 +52,24 @@ font-size:22px;
 /* Messages */
 
 #messages{
-
 flex:1;
 overflow:auto;
 padding:15px;
-
 }
 
 .user{
-
 background:#222;
 padding:10px;
 border-radius:10px;
 margin:6px;
-
 }
 
 .kaali{
-
 background:black;
 border-left:4px solid gold;
 padding:10px;
 border-radius:10px;
 margin:6px;
-
 }
 
 .typing{
@@ -90,39 +79,42 @@ color:gold;
 /* Input */
 
 .inputArea{
-
 display:flex;
 padding:10px;
 border-top:1px solid #222;
-
 }
 
 input{
-
 flex:1;
 padding:12px;
 border-radius:10px;
 border:none;
-
 }
 
 button{
-
 background:gold;
 border:none;
-padding:10px 16px;
+padding:10px 14px;
 margin-left:5px;
 border-radius:10px;
 cursor:pointer;
-
 }
 
-@keyframes glow{
+/* Recording Status */
 
+#recordStatus{
+text-align:center;
+color:gold;
+font-size:14px;
+height:20px;
+}
+
+/* Glow */
+
+@keyframes glow{
 0%{filter:drop-shadow(0px 0px 2px gold);}
 50%{filter:drop-shadow(0px 0px 12px gold);}
 100%{filter:drop-shadow(0px 0px 2px gold);}
-
 }
 
 </style>
@@ -155,20 +147,24 @@ cursor:pointer;
 
 </div>
 
+<div id="recordStatus"></div>
+
 </div>
+
 
 <script>
 
-/* Memory */
+/* MEMORY */
 
 let history=[];
-
 let lastReply="";
 
 
-/* Greeting */
+/* OPENING MESSAGE */
 
-let greeting="✨ Namaste! I am KAALI, your mystical guide at DEJOIY. How may I assist you today? 🔮";
+let greeting=
+
+"✨ Namaste. I am KAALI — your mystical guide at DEJOIY. I can help you shop smarter, track orders, discover products and services. How may I assist you today? 🔮";
 
 document.getElementById("messages").innerHTML=
 
@@ -180,7 +176,7 @@ content:greeting
 });
 
 
-/* Send */
+/* SEND MESSAGE */
 
 async function send(){
 
@@ -194,21 +190,23 @@ input.value="";
 
 let box=document.getElementById("messages");
 
+
 box.innerHTML+=
 
 "<div class='user'>"+msg+"</div>";
 
-history.push({
 
+history.push({
 role:"user",
 content:msg
-
 });
 
 
 box.innerHTML+=
 
 "<div class='kaali typing'>KAALI is thinking...</div>";
+
+box.scrollTop=box.scrollHeight;
 
 
 let res=await fetch("/api/chat",{
@@ -220,9 +218,7 @@ headers:{
 },
 
 body:JSON.stringify({
-
 messages:history
-
 })
 
 });
@@ -230,15 +226,16 @@ messages:history
 
 let data=await res.json();
 
+
 box.removeChild(box.lastChild);
+
 
 lastReply=data.reply;
 
-history.push({
 
+history.push({
 role:"assistant",
 content:data.reply
-
 });
 
 
@@ -251,38 +248,53 @@ box.scrollTop=box.scrollHeight;
 }
 
 
-/* Female Spiritual Voice */
+
+/* ENTER KEY */
+
+document.getElementById("input")
+
+.addEventListener("keydown",function(e){
+
+if(e.key==="Enter"){
+send();
+}
+
+});
+
+
+
+/* GODDESS VOICE */
 
 function speak(text){
 
-text=text.replace(/[^\w\s.,]/gi,'');
+let clean=text.replace(/[^\w\s.,]/gi,'');
 
-let speech=new SpeechSynthesisUtterance(text);
+let speech=new SpeechSynthesisUtterance(clean);
 
 let voices=speechSynthesis.getVoices();
 
 speech.voice=
 
-voices.find(v=>
+voices.find(v=>v.name.includes("Female"))
+||
+voices.find(v=>v.name.includes("Zira"))
+||
+voices[0];
 
-v.name.includes("Female") ||
-v.name.includes("Zira") ||
-v.name.includes("Google UK English Female")
 
-);
-
-speech.rate=0.9;
-
-speech.pitch=1.2;
-
+speech.rate=0.85;
+speech.pitch=1.25;
 speech.volume=1;
+
+speechSynthesis.cancel();
 
 speechSynthesis.speak(speech);
 
 }
 
 
-/* Voice Input */
+
+/* RECORD */
 
 let rec;
 
@@ -292,14 +304,32 @@ rec=new webkitSpeechRecognition();
 
 rec.lang="en-IN";
 
-rec.onresult=e=>{
+rec.onstart=function(){
+
+document.getElementById("recordStatus")
+
+.innerHTML="🎤 Listening...";
+
+}
+
+rec.onend=function(){
+
+document.getElementById("recordStatus")
+
+.innerHTML="";
+
+}
+
+rec.onresult=function(e){
 
 document.getElementById("input").value=
+
 e.results[0][0].transcript;
 
 }
 
 }
+
 
 function record(){
 
