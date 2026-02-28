@@ -1,148 +1,80 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({
- apiKey: process.env.OPENAI_API_KEY
+const openai=new OpenAI({
+
+apiKey:process.env.OPENAI_API_KEY
+
 });
+
 
 export default async function handler(req,res){
 
 try{
 
-const messages=req.body.messages || [];
+const messages=req.body.messages;
 
-const userMessage=
-messages[messages.length-1]?.content || "";
+let last=
+messages[messages.length-1].content.toLowerCase();
 
 
-/* ORDER TRACKING */
 
-if(userMessage.toLowerCase().includes("order")){
+/* LOGIN */
 
-try{
-
-let r=await fetch(
-"https://dejoiy.com/wp-json/kaali/v1/orders"
-);
-
-let orders=await r.json();
-
-if(!orders.length){
+if(last.includes("login")){
 
 return res.json({
 
 reply:
-"Please login to Dejoiy first:\nhttps://www.dejoiy.com/login"
+'<a href="https://www.dejoiy.com/login" target="_blank">Open Login Page</a>'
 
 });
 
 }
 
-let text="📦 Your Orders:\n\n";
 
-orders.forEach(o=>{
+/* ACCOUNT */
 
-text+=
-`Order ${o.id}
-Status: ${o.status}
-₹${o.total}
-
-`;
-
-});
-
-return res.json({reply:text});
-
-}catch(e){
+if(last.includes("account")){
 
 return res.json({
 
 reply:
-"⚠ Unable to fetch orders.\nLogin first:\nhttps://www.dejoiy.com/login"
+'<a href="https://www.dejoiy.com/my-account" target="_blank">Open Account Page</a>'
 
 });
 
 }
 
-}
 
+/* SHOP */
 
-/* PRODUCT SEARCH */
+if(last.includes("shop")){
 
-if(
-userMessage.toLowerCase().includes("find")||
-userMessage.toLowerCase().includes("buy")||
-userMessage.toLowerCase().includes("search")
-){
+return res.json({
 
-let r=await fetch(
-"https://dejoiy.com/wp-json/kaali/v1/search?q="+userMessage
-);
-
-let products=await r.json();
-
-let text="🛒 Products:\n\n";
-
-products.forEach(p=>{
-
-text+=
-`<a href="${p.link}" target="_blank">
-${p.name} ₹${p.price}
-</a>
-
-`;
+reply:
+'<a href="https://www.dejoiy.com/shop" target="_blank">Open Shop</a>'
 
 });
-
-return res.json({reply:text});
-
-}
-
-
-/* RECOMMEND */
-
-if(userMessage.toLowerCase().includes("recommend")){
-
-let r=await fetch(
-"https://dejoiy.com/wp-json/kaali/v1/products"
-);
-
-let products=await r.json();
-
-let text="✨ Recommended:\n\n";
-
-products.forEach(p=>{
-
-text+=
-`<a href="${p.link}" target="_blank">
-${p.name} ₹${p.price}
-</a>
-
-`;
-
-});
-
-return res.json({reply:text});
 
 }
 
 
 /* SUPPORT */
 
-if(
-userMessage.toLowerCase().includes("refund")||
-userMessage.toLowerCase().includes("complaint")||
-userMessage.toLowerCase().includes("support")
-){
+if(last.includes("refund")||
+last.includes("support")||
+last.includes("complaint")){
 
 return res.json({
 
 reply:
 `
-Support Team
+Contact Support:
 
-Phone: 011-46594424
-WhatsApp: +919217974851
-Email: support-care@dejoiy.com
+📞 011-46594424  
+📱 +919217974851  
+✉ support-care@dejoiy.com
 `
 
 });
@@ -150,64 +82,58 @@ Email: support-care@dejoiy.com
 }
 
 
-/* GODDESS KAALI */
 
-const systemPrompt=`
-
-You are KAALI.
-
-Female mystical AI of DEJOIY marketplace.
-
-Speak calm and wise.
-
-You help with:
-
-• Orders
-• Products
-• Shopping
-• Navigation
-
-Always provide clickable links.
-
-Login:
-https://www.dejoiy.com/login
-
-Account:
-https://www.dejoiy.com/my-account
-
-Shop:
-https://www.dejoiy.com/shop
-
-Also guide about dejoiy.in
-
-`;
-
-
+/* AI */
 
 const ai=await openai.chat.completions.create({
 
 model:"gpt-4o-mini",
 
 messages:[
+
 {
+
 role:"system",
-content:systemPrompt
+
+content:`
+
+You are KAALI.
+
+Female mystical assistant of DEJOIY.
+
+You guide users to:
+
+Products
+Orders
+Shopping
+Services
+
+Always provide clickable links.
+
+`
+
 },
+
 ...messages
+
 ]
 
 });
 
 
 res.json({
+
 reply:ai.choices[0].message.content
+
 });
 
 
 }catch(e){
 
 res.json({
-reply:"⚠ KAALI is restarting..."
+
+reply:"KAALI restarting..."
+
 });
 
 }
