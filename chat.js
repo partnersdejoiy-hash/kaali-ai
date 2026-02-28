@@ -8,21 +8,30 @@ const client = new OpenAI({
 apiKey: process.env.OPENAI_API_KEY
 });
 
-const message = req.body.message;
+let message = "Hello";
 
-const response = await client.responses.create({
+if(req.body){
+message = req.body.message || "Hello";
+}
+
+const completion = await client.chat.completions.create({
 model: "gpt-4.1-mini",
-input: message
+messages: [
+{
+role:"user",
+content: message
+}
+]
 });
 
 res.status(200).json({
-reply: response.output_text
+reply: completion.choices[0].message.content
 });
 
-} catch (error){
+} catch(error){
 
 res.status(200).json({
-reply:"Kaali is waking up... Please try again."
+reply:"Kaali is waking up... Try again."
 });
 
 }
