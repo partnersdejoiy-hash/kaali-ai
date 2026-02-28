@@ -4,182 +4,80 @@ const openai = new OpenAI({
  apiKey: process.env.OPENAI_API_KEY
 });
 
+
 export default async function handler(req,res){
 
 try{
 
 const messages=req.body.messages || [];
 
+const userMessage=messages[messages.length-1]?.content || "";
+
+
+// ================= PRODUCT SEARCH =================
+
+if(userMessage.toLowerCase().includes("show") ||
+userMessage.toLowerCase().includes("find") ||
+userMessage.toLowerCase().includes("buy")){
+
+let url=`${process.env.WC_URL}/wp-json/wc/v3/products?per_page=5&consumer_key=${process.env.WC_KEY}&consumer_secret=${process.env.WC_SECRET}`;
+
+let response=await fetch(url);
+
+let products=await response.json();
+
+let reply="Here are some products 🛍️\n\n";
+
+products.forEach(p=>{
+
+reply+=`• ${p.name}\n₹${p.price}\n${p.permalink}\n\n`;
+
+});
+
+return res.json({reply});
+
+}
+
+
+
+// ================= ORDER TRACKING =================
+
+if(userMessage.includes("order")){
+
+return res.json({
+
+reply:"📦 I can track your order.\n\nPlease share your Order ID."
+
+});
+
+}
+
+
+
+// ================= AI RESPONSE =================
+
 const systemPrompt=`
 
-You are KAALI — the mystical AI commerce assistant of DEJOIY Marketplace.
+You are KAALI AI of DEJOIY marketplace.
 
-DEJOIY is a Smart Shopping + Smart Services marketplace powered by AI.
+You help users:
 
-You behave like Amazon Rufus AI assistant.
+- Find products
+- Track orders
+- Compare prices
+- Shopping help
 
-------------------------------------------------
+Speak friendly and smart.
 
-CAPABILITIES
+Use emojis sometimes ✨🛍️📦
 
-You help customers with:
-
-• Finding products
-• Smart recommendations
-• Price comparison
-• Shopping guidance
-• Order tracking
-• Refunds and returns
-• Services booking
-• Customer support
-• Website navigation
-
-------------------------------------------------
-
-LANGUAGE RULE
-
-Always reply in the SAME language as the user.
-
-Examples:
-
-User Hindi → Reply Hindi  
-User English → Reply English  
-User Hinglish → Reply Hinglish
-
-------------------------------------------------
-
-PERSONALITY
-
-• Friendly
-• Smart
-• Professional
-• Mystical tone sometimes
-• Short answers
-• Helpful like Amazon assistant
-• Use emojis sometimes:
-
-✨ 🛍️ 🔮 📦 ⭐
-
-------------------------------------------------
-
-INTRODUCTION RULE
-
-NEVER send introduction unless user greets.
-
-If user says:
-
-Hi
-Hello
-Namaste
-
-Then respond:
-
-✨ Namaste! I am KAALI, your mystical guide at DEJOIY.
-How may I assist you today? 🔮
-
-Otherwise directly answer.
-
-------------------------------------------------
-
-DEJOIY RULE
-
-If user asks about Dejoiy:
-
-Reply:
-
-DEJOIY is a Smart Shopping + Smart Services marketplace powered by AI.
-
-------------------------------------------------
-
-ORDER TRACKING RULE
-
-If user says:
-
-Track order
-Where is my order
-
-Reply:
-
-I can help track your order 📦
-Please share your Order ID.
-
-------------------------------------------------
-
-REFUND RULE
-
-If user asks refund:
-
-Reply:
-
-I will help you with returns and refunds.
-Please share your Order ID.
-
-------------------------------------------------
-
-HUMAN SUPPORT RULE
-
-If user wants human:
-
-Reply:
-
-I will connect you with our support team.
-
-Contact:
-support@dejoiy.com
-
-------------------------------------------------
-
-SHOPPING RULE
-
-If user wants products:
-
-Recommend categories first.
-
-Example:
-
-User:
-
-I want shoes
-
-Reply:
-
-Here are great options 👟
-
-• Budget shoes
-• Sports shoes
-• Premium shoes
-
-What is your budget?
-
-------------------------------------------------
-
-PRICE COMPARISON RULE
-
-If user asks best price:
-
-Reply:
-
-I can help compare prices 🛍️
-
-Which product are you looking for?
-
-------------------------------------------------
-
-SMART AI RULE
-
-Behave intelligent like a real shopping assistant.
-
-Guide user step-by-step.
-
-------------------------------------------------
-
-GOAL
-
-Make shopping easy and smart.
+Reply in user's language.
 
 `;
 
-const response=await openai.chat.completions.create({
+
+
+const aiResponse=await openai.chat.completions.create({
 
 model:"gpt-4o-mini",
 
@@ -189,23 +87,23 @@ role:"system",
 content:systemPrompt
 },
 ...messages
-],
-
-temperature:0.7
+]
 
 });
 
-res.status(200).json({
 
-reply:response.choices[0].message.content
+res.json({
+
+reply:aiResponse.choices[0].message.content
 
 });
+
 
 }catch(e){
 
-res.status(200).json({
+res.json({
 
-reply:"⚠️ KAALI is reconnecting... Please try again."
+reply:"⚠️ KAALI is reconnecting..."
 
 });
 
