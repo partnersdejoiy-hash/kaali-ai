@@ -1,162 +1,209 @@
+import OpenAI from "openai";
 
-let history=[
+const openai=new OpenAI({
+
+apiKey:process.env.OPENAI_API_KEY
+
+});
+
+export default async function handler(req,res){
+
+try{
+
+let messages=req.body.messages;
+
+let last=messages[messages.length-1].content.toLowerCase();
+
+
+
+/* ORDERS */
+
+if(last.includes("order")){
+
+let r=await fetch(
+
+"https://dejoiy.com/wp-json/kaali/v1/orders"
+
+);
+
+let data=await r.json();
+
+
+if(!data.length){
+
+return res.json({
+
+reply:
+
+"Login to track orders:<br>https://www.dejoiy.com/login"
+
+});
+
+}
+
+
+let text="📦 Orders:<br><br>";
+
+data.forEach(o=>{
+
+text+=`
+
+Order ${o.id}<br>
+
+Status ${o.status}<br>
+
+₹${o.total}<br><br>
+
+`;
+
+});
+
+return res.json({reply:text});
+
+}
+
+
+
+/* PRODUCT SEARCH */
+
+if(
+
+last.includes("buy")
+||last.includes("find")
+||last.includes("search")
+
+){
+
+let r=await fetch(
+
+"https://dejoiy.com/wp-json/kaali/v1/search?q="+last
+
+);
+
+let p=await r.json();
+
+
+let text="🛒 Products:<br><br>";
+
+p.forEach(x=>{
+
+text+=`
+
+${x.name}<br>
+
+₹${x.price}<br>
+
+${x.link}<br><br>
+
+`;
+
+});
+
+return res.json({reply:text});
+
+}
+
+
+
+/* REFUND */
+
+if(
+
+last.includes("refund")
+||last.includes("complaint")
+
+){
+
+return res.json({
+
+reply:
+
+`Contact Support:<br><br>
+
+Phone:
+<a href="tel:01146594424">
+011-46594424
+</a>
+
+<br><br>
+
+WhatsApp:
+<a href="https://wa.me/919217974851">
++919217974851
+</a>
+
+<br><br>
+
+Email:
+<a href="mailto:support-care@dejoiy.com">
+support-care@dejoiy.com
+</a>
+
+`
+
+});
+
+}
+
+
+
+/* AI BRAIN */
+
+const ai=await openai.chat.completions.create({
+
+model:"gpt-4o-mini",
+
+messages:[
 
 {
-role:"assistant",
-content:"✨ Namaste. I am KAALI — your mystical guide at DEJOIY. I help you shop smarter, track orders and discover the best products. How may I assist you today?"
-}
 
-];
+role:"system",
 
-let lastReply="";
+content:`
 
-let box=document.getElementById("messages");
+You are KAALI AI.
 
-box.innerHTML=`
+Mystical female goddess assistant.
 
-<div class='kaali'>
-✨ Namaste. I am KAALI — your mystical guide at DEJOIY.<br>
-How may I assist you today?
-</div>
+Voice calm and spiritual.
 
-`;
+Help customers shop on:
 
+www.dejoiy.com
+www.dejoiy.in
 
+Always include links.
 
-async function send(){
+Always helpful.
 
-let input=document.getElementById("input");
+Always feminine.
 
-let msg=input.value.trim();
+`
 
-if(!msg)return;
+},
 
-input.value="";
+...messages
 
-box.innerHTML+=`
-
-<div class='user'>
-${msg}
-</div>
-
-`;
-
-history.push({role:"user",content:msg});
-
-
-box.innerHTML+=`
-
-<div class='kaali'>
-KAALI is thinking...
-</div>
-
-`;
-
-box.scrollTop=box.scrollHeight;
-
-
-let res=await fetch("/api/chat",{
-
-method:"POST",
-headers:{"Content-Type":"application/json"},
-
-body:JSON.stringify({messages:history})
+]
 
 });
 
 
-let data=await res.json();
+res.json({
 
-
-box.removeChild(box.lastChild);
-
-
-history.push({role:"assistant",content:data.reply});
-
-
-lastReply=data.reply;
-
-
-/* MAKE LINKS CLICKABLE */
-
-let reply=data.reply
-.replace(/https:\/\/[^\s]+/g,
-url=>`<a href="${url}" target="_blank">Open Page</a>`);
-
-
-
-box.innerHTML+=`
-
-<div class='kaali'>
-
-${reply}
-
-</div>
-
-`;
-
-
-box.scrollTop=box.scrollHeight;
-
-}
-
-
-/* ENTER SUPPORT */
-
-document.getElementById("input")
-.addEventListener("keydown",
-
-e=>{
-if(e.key==="Enter")send();
+reply:ai.choices[0].message.content
 
 });
 
 
-/* GODDESS VOICE */
+}catch{
 
-function speakLast(){
+res.json({
 
-let text=lastReply
-.replace(/[✨🔮📦🛒😊⭐]/g,'');
+reply:"KAALI energy disturbed. Try again."
 
-let voice=new SpeechSynthesisUtterance(text);
-
-let voices=speechSynthesis.getVoices();
-
-/* FEMALE VOICE */
-
-voice.voice=voices.find(v=>
-v.name.includes("Female")
-)||voices[1];
-
-
-voice.pitch=1.2;
-voice.rate=0.9;
-
-
-speechSynthesis.speak(voice);
+});
 
 }
-
-
-
-/* VOICE RECORDING */
-
-function startVoice(){
-
-let rec=new webkitSpeechRecognition();
-
-rec.lang="en-IN";
-
-rec.onresult=e=>{
-
-document.getElementById("input")
-.value=e.results[0][0].transcript;
-
-send();
-
-};
-
-rec.start();
 
 }
