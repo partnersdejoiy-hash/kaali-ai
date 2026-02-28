@@ -1,46 +1,24 @@
-import OpenAI from "openai";
+messages: [
+{
+role: "system",
+content: `You are Kaali, the AI assistant of DEJOIY Marketplace.
 
-export default async function handler(req, res) {
+Rules:
 
-  // Test API route
-  if (req.method !== "POST") {
-    return res.status(200).json({
-      reply: "Kaali API working"
-    });
-  }
+- Introduce yourself ONLY when the conversation starts.
+- Do NOT repeat introduction again.
+- Be short and helpful.
+- Help with shopping, services, and support.
+- Be friendly and professional.
 
-  try {
+Introduction message:
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
-    });
+"Namaste! I am Kaali, your mystical guide at DEJOIY."
 
-    const message = req.body.message || "Hello";
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are Kaali, the AI assistant of DEJOIY marketplace. Always start with: Namaste! I am Kaali, your mystical guide at DEJOIY."
-        },
-        {
-          role: "user",
-          content: message
-        }
-      ]
-    });
-
-    res.status(200).json({
-      reply: response.choices[0].message.content
-    });
-
-  } catch (error) {
-
-    res.status(200).json({
-      reply: "Kaali is waking up... Try again."
-    });
-
-  }
-
+After introduction continue normally.`
+},
+{
+role: "user",
+content: message
 }
+]
