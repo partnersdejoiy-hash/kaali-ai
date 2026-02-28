@@ -9,7 +9,9 @@ export default async function handler(req,res){
 try{
 
 const messages=req.body.messages || [];
-const userMessage=messages[messages.length-1]?.content || "";
+
+const userMessage=
+messages[messages.length-1]?.content || "";
 
 
 /* ORDER TRACKING */
@@ -18,16 +20,19 @@ if(userMessage.toLowerCase().includes("order")){
 
 try{
 
-let r=await fetch("https://dejoiy.com/wp-json/kaali/v1/orders",{
-credentials:"include"
-});
+let r=await fetch(
+"https://dejoiy.com/wp-json/kaali/v1/orders"
+);
 
 let orders=await r.json();
 
 if(!orders.length){
 
 return res.json({
-reply:"Please login to Dejoiy to view orders.\n\nhttps://www.dejoiy.com/login"
+
+reply:
+"Please login to Dejoiy first:\nhttps://www.dejoiy.com/login"
+
 });
 
 }
@@ -36,7 +41,8 @@ let text="📦 Your Orders:\n\n";
 
 orders.forEach(o=>{
 
-text+=`Order ${o.id}
+text+=
+`Order ${o.id}
 Status: ${o.status}
 ₹${o.total}
 
@@ -49,7 +55,10 @@ return res.json({reply:text});
 }catch(e){
 
 return res.json({
-reply:"⚠ Unable to fetch orders. Please login first.\n\nhttps://www.dejoiy.com/login"
+
+reply:
+"⚠ Unable to fetch orders.\nLogin first:\nhttps://www.dejoiy.com/login"
+
 });
 
 }
@@ -57,16 +66,17 @@ reply:"⚠ Unable to fetch orders. Please login first.\n\nhttps://www.dejoiy.com
 }
 
 
-
 /* PRODUCT SEARCH */
 
-if(userMessage.toLowerCase().includes("find")
-||userMessage.toLowerCase().includes("search")
-||userMessage.toLowerCase().includes("buy")){
+if(
+userMessage.toLowerCase().includes("find")||
+userMessage.toLowerCase().includes("buy")||
+userMessage.toLowerCase().includes("search")
+){
 
-let q=userMessage;
-
-let r=await fetch(`https://dejoiy.com/wp-json/kaali/v1/search?q=${q}`);
+let r=await fetch(
+"https://dejoiy.com/wp-json/kaali/v1/search?q="+userMessage
+);
 
 let products=await r.json();
 
@@ -74,7 +84,8 @@ let text="🛒 Products:\n\n";
 
 products.forEach(p=>{
 
-text+=`<a href="${p.link}" target="_blank">
+text+=
+`<a href="${p.link}" target="_blank">
 ${p.name} ₹${p.price}
 </a>
 
@@ -87,12 +98,13 @@ return res.json({reply:text});
 }
 
 
-
 /* RECOMMEND */
 
 if(userMessage.toLowerCase().includes("recommend")){
 
-let r=await fetch("https://dejoiy.com/wp-json/kaali/v1/products");
+let r=await fetch(
+"https://dejoiy.com/wp-json/kaali/v1/products"
+);
 
 let products=await r.json();
 
@@ -100,7 +112,8 @@ let text="✨ Recommended:\n\n";
 
 products.forEach(p=>{
 
-text+=`<a href="${p.link}" target="_blank">
+text+=
+`<a href="${p.link}" target="_blank">
 ${p.name} ₹${p.price}
 </a>
 
@@ -113,25 +126,23 @@ return res.json({reply:text});
 }
 
 
-
-/* HUMAN SUPPORT */
+/* SUPPORT */
 
 if(
-userMessage.toLowerCase().includes("refund") ||
-userMessage.toLowerCase().includes("complaint") ||
+userMessage.toLowerCase().includes("refund")||
+userMessage.toLowerCase().includes("complaint")||
 userMessage.toLowerCase().includes("support")
 ){
 
 return res.json({
 
-reply:`
+reply:
+`
+Support Team
 
-Support Team:
-
-Phone: 011-46594424  
-WhatsApp: +919217974851  
+Phone: 011-46594424
+WhatsApp: +919217974851
 Email: support-care@dejoiy.com
-
 `
 
 });
@@ -139,31 +150,24 @@ Email: support-care@dejoiy.com
 }
 
 
-
-/* GODDESS KAALI SYSTEM PROMPT */
+/* GODDESS KAALI */
 
 const systemPrompt=`
 
 You are KAALI.
 
-Female mystical AI assistant of DEJOIY marketplace.
+Female mystical AI of DEJOIY marketplace.
 
-Speak calm, spiritual, wise.
+Speak calm and wise.
 
-You help users:
+You help with:
 
-• Track orders
-• Find products
-• Shopping help
-• Website navigation
+• Orders
+• Products
+• Shopping
+• Navigation
 
-Website knowledge:
-
-www.dejoiy.com
-www.dejoiy.in
-
-
-Always give clickable links:
+Always provide clickable links.
 
 Login:
 https://www.dejoiy.com/login
@@ -171,21 +175,16 @@ https://www.dejoiy.com/login
 Account:
 https://www.dejoiy.com/my-account
 
-Orders:
-https://www.dejoiy.com/my-account/orders
-
 Shop:
 https://www.dejoiy.com/shop
 
-
-Always stay dedicated to DEJOIY.
-
+Also guide about dejoiy.in
 
 `;
 
 
 
-const aiResponse=await openai.chat.completions.create({
+const ai=await openai.chat.completions.create({
 
 model:"gpt-4o-mini",
 
@@ -201,14 +200,14 @@ content:systemPrompt
 
 
 res.json({
-reply:aiResponse.choices[0].message.content
+reply:ai.choices[0].message.content
 });
 
 
 }catch(e){
 
 res.json({
-reply:"⚠ KAALI is awakening again... please retry."
+reply:"⚠ KAALI is restarting..."
 });
 
 }
