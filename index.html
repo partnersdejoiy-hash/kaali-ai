@@ -31,6 +31,8 @@ display:flex;
 flex-direction:column;
 }
 
+/* Header */
+
 .header{
 text-align:center;
 padding:10px;
@@ -46,6 +48,8 @@ animation:glow 3s infinite;
 color:gold;
 font-size:22px;
 }
+
+/* Messages */
 
 #messages{
 flex:1;
@@ -68,6 +72,8 @@ border-radius:12px;
 margin:6px;
 }
 
+/* Input */
+
 .inputArea{
 display:flex;
 padding:10px;
@@ -82,6 +88,8 @@ border-radius:10px;
 border:none;
 font-size:15px;
 }
+
+/* Buttons */
 
 button{
 background:gold;
@@ -136,18 +144,17 @@ animation:pulse 1s infinite;
 
 <button onclick="send()">Send</button>
 
-<button id="micBtn" onclick="startVoice()">🎤</button>
+<button onclick="startVoice()">🎤</button>
 
 <button onclick="speakLast()">🔊</button>
 
 <span id="rec" class="recording" style="display:none">
-● Listening...
+Listening...
 </span>
 
 </div>
 
 </div>
-
 
 <script>
 
@@ -156,7 +163,7 @@ let lastReply="";
 let started=false;
 
 
-/* Send */
+/* SEND */
 
 async function send(){
 
@@ -170,11 +177,11 @@ input.value="";
 let box=document.getElementById("messages");
 
 
-/* FIRST MESSAGE TRIGGER */
+/* Greeting only after first interaction */
 
 if(!started){
 
-let greet="✨ Namaste! I am KAALI, your mystical guide at DEJOIY. How may I assist you today?";
+let greet="Namaste! I am KAALI, your mystical guide at DEJOIY. How may I assist you today?";
 
 box.innerHTML+="<div class='kaali'>"+greet+"</div>";
 
@@ -189,13 +196,13 @@ started=true;
 
 box.innerHTML+="<div class='user'>"+msg+"</div>";
 
-history.push({
-role:"user",
-content:msg
-});
+history.push({role:"user",content:msg});
 
 
 box.innerHTML+="<div class='kaali'>KAALI is thinking...</div>";
+
+box.scrollTop=box.scrollHeight;
+
 
 let res=await fetch("/api/chat",{
 
@@ -228,7 +235,7 @@ return;
 }
 
 
-/* SHOW */
+/* SHOW REPLY */
 
 history.push({
 role:"assistant",
@@ -244,10 +251,10 @@ box.scrollTop=box.scrollHeight;
 }
 
 
-
 /* ENTER */
 
 document.getElementById("input")
+
 .addEventListener("keydown",e=>{
 if(e.key==="Enter") send();
 });
