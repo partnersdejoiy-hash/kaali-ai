@@ -13,60 +13,98 @@ const messages=req.body.messages||[];
 const text=messages[messages.length-1].content.toLowerCase();
 
 
-/* WEBSITE CHOICE */
 
-if(text.includes("website")){
+/* LOGIN */
+
+if(text.includes("login"))
+return res.json({
+reply:"You can login to your Dejoiy account.",
+goto:"https://www.dejoiy.com/login"
+});
+
+
+/* CART */
+
+if(text.includes("cart"))
+return res.json({
+reply:"Opening your cart.",
+goto:"https://www.dejoiy.com/cart"
+});
+
+
+/* SHOP */
+
+if(text.includes("shop"))
+return res.json({
+reply:"Browse products here.",
+goto:"https://www.dejoiy.com/shop"
+});
+
+
+/* ACCOUNT */
+
+if(text.includes("account"))
+return res.json({
+reply:"Opening your account.",
+goto:"https://www.dejoiy.com/my-account"
+});
+
+
+/* FAQ */
+
+if(text.includes("faq")){
 
 return res.json({
 
 reply:
 
-"Choose a website:\n\n1️⃣ https://www.dejoiy.com\n\n2️⃣ https://www.dejoiy.in"
+"Dejoiy FAQ helps you understand orders, delivery, payments and returns.\n\nYou can read full FAQ below.",
+
+goto:"https://www.dejoiy.com/faq"
 
 });
 
 }
 
 
-/* MAGIC NAVIGATION */
+/* REFUND POLICY */
 
-if(text.includes("login"))
-return res.json({url:"https://www.dejoiy.com/login"});
+if(text.includes("refund")){
 
-if(text.includes("cart"))
-return res.json({url:"https://www.dejoiy.com/cart"});
+return res.json({
 
-if(text.includes("shop"))
-return res.json({url:"https://www.dejoiy.com/shop"});
+reply:
 
-if(text.includes("account"))
-return res.json({url:"https://www.dejoiy.com/my-account"});
+"Dejoiy Refund Policy:\n\n• Eligible items can be returned.\n• Refund processed after verification.\n• Processing time 3-7 days.\n\nFull policy below.",
 
-if(text.includes("refund policy"))
-return res.json({url:"https://www.dejoiy.com/refund-policy"});
+goto:"https://www.dejoiy.com/refund-policy"
 
-if(text.includes("faq"))
-return res.json({url:"https://www.dejoiy.com/faq"});
+});
+
+}
+
 
 
 /* WHATSAPP SUPPORT */
 
 if(
-text.includes("refund")||
-text.includes("return")||
 text.includes("complaint")||
-text.includes("cancel")
+text.includes("cancel")||
+text.includes("support")
 ){
 
 return res.json({
 
 reply:
 
-"Support Options:\n\nWhatsApp:\nhttps://wa.me/919217974851\n\nPhone:\n011-46594424\n\nEmail:\nsupport-care@dejoiy.com"
+"Support Options:\n\nWhatsApp\nPhone\nEmail",
+
+goto:"https://wa.me/919217974851"
 
 });
 
 }
+
 
 
 /* PRODUCT SEARCH */
@@ -74,9 +112,7 @@ reply:
 if(text.includes("buy")||text.includes("product")){
 
 let r=await fetch(
-
 "https://dejoiy.com/wp-json/kaali/v1/search?q="+text
-
 );
 
 let p=await r.json();
@@ -109,26 +145,30 @@ content:`
 
 You are KAALI AI.
 
-Female mystical AI of DEJOIY.
+Mystical female AI of DEJOIY.
 
 You know everything about:
 
 www.dejoiy.com
 www.dejoiy.in
 
-You guide customers.
 
-You give direct links.
+You remember conversation context.
 
-If needed redirect users.
+You help customers shop smarter.
 
-If product not available give references.
+You explain policies first.
+
+Then offer navigation.
+
+You give short smart answers.
 
 Personality:
 
 Calm
 Wise
 Warm
+
 
 Support:
 
