@@ -8,7 +8,7 @@ const client = new OpenAI({
 apiKey: process.env.OPENAI_API_KEY
 });
 
-const message = req.body.message || "Hello";
+const message = req.body.message;
 
 const response = await client.responses.create({
 model: "gpt-4.1-mini",
@@ -19,10 +19,10 @@ res.status(200).json({
 reply: response.output_text
 });
 
-} catch(error){
+} catch (error){
 
-res.status(500).json({
-reply:"Kaali is waking up... Try again."
+res.status(200).json({
+reply:"Kaali is waking up... Please try again."
 });
 
 }
