@@ -23,8 +23,6 @@ display:flex;
 justify-content:center;
 }
 
-/* Container */
-
 .container{
 width:100%;
 max-width:420px;
@@ -32,8 +30,6 @@ height:100%;
 display:flex;
 flex-direction:column;
 }
-
-/* Header */
 
 .header{
 text-align:center;
@@ -51,8 +47,6 @@ color:gold;
 font-size:22px;
 }
 
-/* Messages */
-
 #messages{
 flex:1;
 overflow:auto;
@@ -64,7 +58,6 @@ background:#222;
 padding:10px;
 border-radius:12px;
 margin:6px;
-animation:fade .3s;
 }
 
 .kaali{
@@ -73,10 +66,7 @@ border-left:4px solid gold;
 padding:10px;
 border-radius:12px;
 margin:6px;
-animation:fade .5s;
 }
-
-/* Input */
 
 .inputArea{
 display:flex;
@@ -93,8 +83,6 @@ border:none;
 font-size:15px;
 }
 
-/* Buttons */
-
 button{
 background:gold;
 border:none;
@@ -105,50 +93,23 @@ cursor:pointer;
 font-weight:bold;
 }
 
-/* Recording indicator */
-
 .recording{
-
 color:red;
 font-weight:bold;
 margin-left:8px;
-
 animation:pulse 1s infinite;
-
 }
-
-/* Microphone animation */
-
-.micActive{
-
-background:red!important;
-color:white;
-
-}
-
-/* Animations */
 
 @keyframes glow{
-
 0%{filter:drop-shadow(0 0 2px gold);}
 50%{filter:drop-shadow(0 0 12px gold);}
 100%{filter:drop-shadow(0 0 2px gold);}
-
 }
 
 @keyframes pulse{
-
 0%{opacity:.3}
 50%{opacity:1}
 100%{opacity:.3}
-
-}
-
-@keyframes fade{
-
-from{opacity:0;transform:translateY(10px);}
-to{opacity:1;}
-
 }
 
 </style>
@@ -180,9 +141,7 @@ to{opacity:1;}
 <button onclick="speakLast()">🔊</button>
 
 <span id="rec" class="recording" style="display:none">
-
 ● Listening...
-
 </span>
 
 </div>
@@ -193,25 +152,15 @@ to{opacity:1;}
 <script>
 
 let history=[];
-
 let lastReply="";
-
-/* Greeting */
-
-let greet="✨ Namaste! I am KAALI — your mystical guide at DEJOIY. How may I assist you today? 🔮";
-
-document.getElementById("messages").innerHTML=
-"<div class='kaali'>"+greet+"</div>";
-
-history.push({role:"assistant",content:greet});
+let started=false;
 
 
-/* Send Message */
+/* Send */
 
 async function send(){
 
 let input=document.getElementById("input");
-
 let msg=input.value.trim();
 
 if(!msg) return;
@@ -220,15 +169,33 @@ input.value="";
 
 let box=document.getElementById("messages");
 
-box.innerHTML+=
-"<div class='user'>"+msg+"</div>";
 
-history.push({role:"user",content:msg});
+/* FIRST MESSAGE TRIGGER */
 
-box.innerHTML+=
-"<div class='kaali'>KAALI is thinking 🔮</div>";
+if(!started){
 
-box.scrollTop=box.scrollHeight;
+let greet="✨ Namaste! I am KAALI, your mystical guide at DEJOIY. How may I assist you today?";
+
+box.innerHTML+="<div class='kaali'>"+greet+"</div>";
+
+history.push({role:"assistant",content:greet});
+
+started=true;
+
+}
+
+
+/* USER */
+
+box.innerHTML+="<div class='user'>"+msg+"</div>";
+
+history.push({
+role:"user",
+content:msg
+});
+
+
+box.innerHTML+="<div class='kaali'>KAALI is thinking...</div>";
 
 let res=await fetch("/api/chat",{
 
@@ -238,13 +205,30 @@ headers:{
 "Content-Type":"application/json"
 },
 
-body:JSON.stringify({messages:history})
+body:JSON.stringify({
+messages:history
+})
 
 });
+
 
 let data=await res.json();
 
 box.removeChild(box.lastChild);
+
+
+/* MAGIC NAVIGATION */
+
+if(data.url){
+
+window.parent.location.href=data.url;
+
+return;
+
+}
+
+
+/* SHOW */
 
 history.push({
 role:"assistant",
@@ -253,50 +237,39 @@ content:data.reply
 
 lastReply=data.reply;
 
-box.innerHTML+=
-"<div class='kaali'>"+data.reply+"</div>";
+box.innerHTML+="<div class='kaali'>"+data.reply+"</div>";
 
 box.scrollTop=box.scrollHeight;
 
 }
 
 
-/* Enter key */
+
+/* ENTER */
 
 document.getElementById("input")
-
 .addEventListener("keydown",e=>{
-
 if(e.key==="Enter") send();
-
 });
 
 
-/* Voice Input */
+/* VOICE INPUT */
 
 function startVoice(){
 
 let rec=document.getElementById("rec");
 
-let mic=document.getElementById("micBtn");
-
 rec.style.display="inline";
-
-mic.classList.add("micActive");
 
 let speech=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
 
 speech.lang="en-IN";
-
-speech.interimResults=false;
 
 speech.start();
 
 speech.onresult=function(e){
 
 rec.style.display="none";
-
-mic.classList.remove("micActive");
 
 document.getElementById("input").value=
 e.results[0][0].transcript;
@@ -309,34 +282,23 @@ speech.onerror=function(){
 
 rec.style.display="none";
 
-mic.classList.remove("micActive");
-
 };
 
 }
 
 
-/* Goddess Voice */
+/* GODDESS VOICE */
 
 function speakLast(){
 
 if(!lastReply) return;
 
-let clean=lastReply.replace(/[✨🔮😊📦🛒]/g,"");
+let clean=lastReply.replace(/[^a-zA-Z0-9 .]/g,"");
 
 let speech=new SpeechSynthesisUtterance(clean);
 
-/* Female Goddess Voice */
-
-let voices=speechSynthesis.getVoices();
-
-speech.voice=
-voices.find(v=>v.name.includes("Female")) || voices[1];
-
-speech.pitch=1.4;
 speech.rate=.85;
-speech.volume=1;
-
+speech.pitch=1.3;
 speech.lang="en-IN";
 
 speechSynthesis.speak(speech);
@@ -346,5 +308,4 @@ speechSynthesis.speak(speech);
 </script>
 
 </body>
-
 </html>
