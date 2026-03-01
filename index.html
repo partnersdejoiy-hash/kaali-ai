@@ -17,7 +17,6 @@ background:black;
 color:white;
 font-family:Arial;
 height:100%;
-overflow:hidden;
 display:flex;
 justify-content:center;
 }
@@ -25,10 +24,12 @@ justify-content:center;
 .container{
 width:100%;
 max-width:420px;
-height:100%;
+height:100vh;
 display:flex;
 flex-direction:column;
 }
+
+/* Header */
 
 .header{
 text-align:center;
@@ -45,6 +46,8 @@ animation:glow 3s infinite;
 color:gold;
 font-size:22px;
 }
+
+/* Messages */
 
 #messages{
 flex:1;
@@ -67,16 +70,26 @@ border-radius:12px;
 margin:6px;
 }
 
+/* Buttons */
+
 .gotoBtn{
+
 display:inline-block;
 margin-top:10px;
+
 padding:8px 14px;
+
 background:gold;
 color:black;
+
 border-radius:8px;
+
 font-weight:bold;
 cursor:pointer;
+
 }
+
+/* Input */
 
 .inputArea{
 display:flex;
@@ -130,24 +143,29 @@ animation:pulse 1s infinite;
 <div class="container">
 
 <div class="header">
+
 <img src="kaali.png" class="logo">
+
 <div class="title">KAALI AI</div>
+
 </div>
 
 <div id="messages"></div>
 
 <div class="inputArea">
 
-<input id="input" placeholder="Ask KAALI anything..." autocomplete="off">
+<input id="input" placeholder="Ask KAALI anything...">
 
 <button onclick="send()">Send</button>
 
-<button onclick="startVoice()">🎤</button>
+<button onclick="voice()">🎤</button>
 
-<button onclick="speakLast()">🔊</button>
+<button onclick="speak()">🔊</button>
 
 <span id="rec" class="recording" style="display:none">
+
 Listening...
+
 </span>
 
 </div>
@@ -156,56 +174,26 @@ Listening...
 
 <script>
 
-let history=JSON.parse(localStorage.getItem("kaaliMemory"))||[];
+let history=[];
 
 let lastReply="";
+
 let started=false;
 
 
-/* ENTER KEY — FIXED */
+/* CLICKABLE LINKS */
 
-document.getElementById("input").addEventListener("keypress",function(e){
+function linkify(text){
 
-if(e.key==="Enter"){
-e.preventDefault();
-send();
-}
+return text.replace(
 
-});
+/https?:\/\/[^\s]+/g,
 
+url=>`<a href="${url}" target="_parent" style="color:gold;font-weight:bold">Open Page</a>`
 
-/* CLEAN LINKS — FIXED */
-
-function cleanLink(url){
-
-return url
-.replace(/[)\]\.,]+$/,"")
-.replace(/\s/g,"");
+);
 
 }
-
-
-function clickable(text){
-
-return text.replace(/https?:\/\/[^\s]+/g,function(url){
-
-url=cleanLink(url);
-
-return '<a href="'+url+'" target="_parent" style="color:gold;font-weight:bold;">Open Page</a>';
-
-});
-
-}
-
-
-/* MEMORY SAVE */
-
-function save(){
-
-localStorage.setItem("kaaliMemory",JSON.stringify(history));
-
-}
-
 
 
 /* SEND */
@@ -223,26 +211,32 @@ input.value="";
 let box=document.getElementById("messages");
 
 
+/* Greeting */
+
 if(!started){
 
 let greet="Namaste! I am KAALI, your mystical guide at DEJOIY. How may I assist you today.";
 
-box.innerHTML+="<div class='kaali'>"+greet+"</div>";
+box.innerHTML+=`<div class='kaali'>${greet}</div>`;
 
 history.push({role:"assistant",content:greet});
-
-save();
 
 started=true;
 
 }
 
 
-box.innerHTML+="<div class='user'>"+msg+"</div>";
+/* USER */
 
-history.push({role:"user",content:msg});
+box.innerHTML+=`<div class='user'>${msg}</div>`;
 
-save();
+history.push({
+
+role:"user",
+
+content:msg
+
+});
 
 
 box.innerHTML+="<div class='kaali'>KAALI thinking...</div>";
@@ -250,16 +244,23 @@ box.innerHTML+="<div class='kaali'>KAALI thinking...</div>";
 box.scrollTop=box.scrollHeight;
 
 
+/* API */
 
 let res=await fetch("/api/chat",{
 
 method:"POST",
 
 headers:{
+
 "Content-Type":"application/json"
+
 },
 
-body:JSON.stringify({messages:history})
+body:JSON.stringify({
+
+messages:history
+
+})
 
 });
 
@@ -270,41 +271,43 @@ let data=await res.json();
 box.removeChild(box.lastChild);
 
 
-
-/* REDIRECT */
+/* AUTO NAVIGATION */
 
 if(data.url){
 
-window.parent.location.href=cleanLink(data.url);
+window.parent.location.href=data.url;
 
 return;
 
 }
 
 
+/* SAVE */
+
 history.push({
 
 role:"assistant",
+
 content:data.reply
 
 });
 
-save();
 
 lastReply=data.reply;
 
 
+/* SHOW */
 
-box.innerHTML+=
-"<div class='kaali'>"+clickable(data.reply)+"</div>";
+box.innerHTML+=`<div class='kaali'>${linkify(data.reply)}</div>`;
 
 
+/* BUTTON */
 
 if(data.goto){
 
 box.innerHTML+=
 
-"<div class='gotoBtn' onclick=\"window.parent.location.href='"+cleanLink(data.goto)+"'\">Open Page</div>";
+`<div class='gotoBtn' onclick="window.parent.location.href='${data.goto}'">Open Page</div>`;
 
 }
 
@@ -314,10 +317,20 @@ box.scrollTop=box.scrollHeight;
 }
 
 
+/* ENTER FIX */
+
+document.getElementById("input")
+
+.addEventListener("keypress",e=>{
+
+if(e.key==="Enter") send();
+
+});
+
 
 /* VOICE */
 
-function startVoice(){
+function voice(){
 
 let rec=document.getElementById("rec");
 
@@ -334,6 +347,7 @@ speech.onresult=function(e){
 rec.style.display="none";
 
 document.getElementById("input").value=
+
 e.results[0][0].transcript;
 
 send();
@@ -351,20 +365,19 @@ rec.style.display="none";
 
 /* GODDESS VOICE */
 
-function speakLast(){
+function speak(){
 
 if(!lastReply) return;
 
 let clean=lastReply.replace(/[^a-zA-Z0-9 .]/g,"");
 
-let speech=new SpeechSynthesisUtterance(clean);
+let s=new SpeechSynthesisUtterance(clean);
 
-speech.rate=.9;
-speech.pitch=1.3;
+s.rate=.9;
 
-speech.lang="en-IN";
+s.pitch=1.3;
 
-speechSynthesis.speak(speech);
+speechSynthesis.speak(s);
 
 }
 
