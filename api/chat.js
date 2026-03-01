@@ -15,11 +15,9 @@ messages[messages.length-1].content.toLowerCase();
 
 
 
-/* ORDERS */
+/* ORDER TRACKING */
 
 if(text.includes("order")){
-
-try{
 
 let r=await fetch(
 "https://www.dejoiy.com/wp-json/kaali/v1/orders"
@@ -29,7 +27,7 @@ if(!r.ok){
 
 return res.json({
 
-reply:"Please login to track orders.",
+reply:"Login to view orders",
 
 goto:"https://www.dejoiy.com/login"
 
@@ -43,13 +41,13 @@ if(!orders.length){
 
 return res.json({
 
-reply:"No recent orders found."
+reply:"No recent orders found"
 
 });
 
 }
 
-let reply="Your recent orders:\n\n";
+let reply="Your orders:\n\n";
 
 orders.forEach(o=>{
 
@@ -62,18 +60,6 @@ reply+=
 });
 
 return res.json({reply});
-
-}catch{
-
-return res.json({
-
-reply:"Please login first.",
-
-goto:"https://www.dejoiy.com/login"
-
-});
-
-}
 
 }
 
@@ -95,10 +81,9 @@ return res.json({
 
 reply:
 
-"Contact Support:\n\nWhatsApp:\nhttps://wa.me/919217974851\n\nPhone:\n01146594424\n\nEmail:\nsupport-care@dejoiy.com",
+"Contact Support:\n\nhttps://wa.me/919217974851\n\n01146594424\n\nsupport-care@dejoiy.com",
 
-goto:
-"https://wa.me/919217974851"
+goto:"https://wa.me/919217974851"
 
 });
 
@@ -125,9 +110,9 @@ url:"https://www.dejoiy.com/my-account"
 
 
 
-/* PRODUCTS */
+/* PRODUCT SEARCH */
 
-if(text.includes("buy")||text.includes("product")){
+if(text.includes("product")||text.includes("buy")){
 
 let r=await fetch(
 "https://www.dejoiy.com/wp-json/kaali/v1/search?q="+text
@@ -153,7 +138,7 @@ goto:p[0]?.link
 
 
 
-/* GOD MODE */
+/* SUPREME AI */
 
 const ai=await openai.chat.completions.create({
 
@@ -165,17 +150,27 @@ messages:[
 role:"system",
 content:`
 
-You are KAALI AI.
+You are KAALI SUPREME AI.
 
 You remember conversation.
 
 Never say you have no memory.
 
-You guide Dejoiy customers.
+You know everything about:
 
-Always provide useful answers.
+www.dejoiy.com
+www.dejoiy.in
 
-When possible provide links.
+You always give useful answers.
+
+If possible include website links.
+
+You continuously learn from:
+
+Products
+Policies
+FAQs
+Services
 
 Support:
 
@@ -204,7 +199,9 @@ reply:ai.choices[0].message.content
 }catch{
 
 res.json({
+
 reply:"KAALI reconnecting..."
+
 });
 
 }
