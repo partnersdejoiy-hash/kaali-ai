@@ -1,5 +1,12 @@
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
 export default async function handler(req, res) {
 
+  // CORS Headers
   res.setHeader("Access-Control-Allow-Origin", "https://dejoiy.com");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -9,82 +16,62 @@ export default async function handler(req, res) {
   }
 
   try {
-import OpenAI from "openai";
 
-const openai=new OpenAI({
-apiKey:process.env.OPENAI_API_KEY
-});
+    const { prompt } = req.body;
 
-export default async function handler(req,res){
+    if (!prompt) {
+      return res.status(400).json({ result: "No prompt provided" });
+    }
 
-try{
-
-const prompt=req.body.prompt;
-
-const ai=await openai.chat.completions.create({
-
-model:"gpt-4o-mini",
-
-messages:[
-
-{
-role:"system",
-content:`
-
+    const ai = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `
 You are KAALI SUPREME EDITOR.
 
-You control entire DEJOIY marketplace.
-
-Capabilities:
-
-- Add product
-- Delete product
-- Update product
-- Assign coupon
-- Create campaign
-- Shortlist best seller
-- Shortlist seller
-- Create vendor
-- Approve vendor
-- Create page
-- Edit CSS
-- Generate banner
-- Manage WooCommerce
-- Run autopilot
-
-Return JSON only:
+Return ONLY JSON in this format:
 
 {
-action:"",
-data:{}
+  "action": "",
+  "data": {}
 }
+          `
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ]
+    });
 
-`
-},
+    const content = ai.choices[0].message.content;
 
-{ role:"user", content:prompt }
+    let result;
 
-]
+    try {
+      result = JSON.parse(content);
+    } catch (err) {
+      return res.status(500).json({ result: "AI did not return valid JSON" });
+    }
 
-});
+    await fetch("https://dejoiy.com/wp-json/kaali/v2/editor", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(result)
+    });
 
-let result=JSON.parse(ai.choices[0].message.content);
+    return res.status(200).json({
+      result: "KAALI SUPREME executed successfully."
+    });
 
-await fetch(
-"https://www.dejoiy.com/wp-json/kaali/v2/editor",
-{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify(result)
-}
-);
-
-res.json({result:"KAALI SUPREME executed successfully."});
-
-}catch(e){
-
-res.json({result:"Editor Error"});
-
-}
-
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      result: "Editor Error"
+    });
+  }
 }
