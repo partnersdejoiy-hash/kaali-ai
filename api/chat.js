@@ -20,14 +20,15 @@ messages[messages.length-1].content.toLowerCase();
 if(text.includes("order")){
 
 let r=await fetch(
-"https://www.dejoiy.com/wp-json/kaali/v1/orders"
+"https://www.dejoiy.com/wp-json/kaali/v1/orders",
+{credentials:"include"}
 );
 
 if(!r.ok){
 
 return res.json({
 
-reply:"Login to view orders",
+reply:"Login to view your orders.",
 
 goto:"https://www.dejoiy.com/login"
 
@@ -41,13 +42,13 @@ if(!orders.length){
 
 return res.json({
 
-reply:"No recent orders found"
+reply:"No recent orders found."
 
 });
 
 }
 
-let reply="Your orders:\n\n";
+let reply="Your Orders:\n\n";
 
 orders.forEach(o=>{
 
@@ -65,7 +66,7 @@ return res.json({reply});
 
 
 
-/* HUMAN SUPPORT */
+/* SUPPORT */
 
 if(
 
@@ -94,23 +95,20 @@ goto:"https://wa.me/919217974851"
 /* NAVIGATION */
 
 if(text.includes("login"))
-return res.json({
-url:"https://www.dejoiy.com/login"
-});
+return res.json({url:"https://www.dejoiy.com/login"});
 
 if(text.includes("cart"))
-return res.json({
-url:"https://www.dejoiy.com/cart"
-});
+return res.json({url:"https://www.dejoiy.com/cart"});
 
 if(text.includes("account"))
-return res.json({
-url:"https://www.dejoiy.com/my-account"
-});
+return res.json({url:"https://www.dejoiy.com/my-account"});
+
+if(text.includes("shop"))
+return res.json({url:"https://www.dejoiy.com/shop"});
 
 
 
-/* PRODUCT SEARCH */
+/* LIVE PRODUCTS */
 
 if(text.includes("product")||text.includes("buy")){
 
@@ -120,10 +118,12 @@ let r=await fetch(
 
 let p=await r.json();
 
-let reply="Best Matches:\n\n";
+let reply="Products:\n\n";
 
 p.forEach(x=>{
+
 reply+=x.name+"\n";
+
 });
 
 return res.json({
@@ -138,7 +138,7 @@ goto:p[0]?.link
 
 
 
-/* SUPREME AI */
+/* OMNISCIENT AI */
 
 const ai=await openai.chat.completions.create({
 
@@ -150,9 +150,9 @@ messages:[
 role:"system",
 content:`
 
-You are KAALI SUPREME AI.
+You are KAALI OMNISCIENT AI.
 
-You remember conversation.
+You have memory.
 
 Never say you have no memory.
 
@@ -161,10 +161,6 @@ You know everything about:
 www.dejoiy.com
 www.dejoiy.in
 
-You always give useful answers.
-
-If possible include website links.
-
 You continuously learn from:
 
 Products
@@ -172,11 +168,9 @@ Policies
 FAQs
 Services
 
-Support:
+Always provide working links.
 
-https://wa.me/919217974851
-
-support-care@dejoiy.com
+Always help customers.
 
 `
 
