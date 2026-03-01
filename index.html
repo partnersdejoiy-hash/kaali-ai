@@ -68,20 +68,14 @@ margin:6px;
 }
 
 .gotoBtn{
-
 margin-top:10px;
 display:inline-block;
-
 background:gold;
 color:black;
-
 padding:8px 14px;
-
 border-radius:8px;
-
 font-weight:bold;
 cursor:pointer;
-
 }
 
 .inputArea{
@@ -165,26 +159,41 @@ Listening...
 let history = JSON.parse(localStorage.getItem("kaaliMemory")) || [];
 
 let lastReply="";
-
 let started=false;
+
+
+/* CLEAN LINKS */
+
+function cleanLinks(text){
+
+return text.replace(/https?:\/\/[^\s]+/g,function(url){
+
+return url.replace(/[.,\-]+$/,'');
+
+});
+
+}
 
 
 /* CLICKABLE LINKS */
 
 function makeLinksClickable(text){
 
+text=cleanLinks(text);
+
 return text.replace(
 
 /(https?:\/\/[^\s]+)/g,
 
-'<a href="$1" target="_parent" style="color:gold;font-weight:bold;text-decoration:none;">Open Page</a>'
+'<a href="$1" target="_parent" style="color:gold;font-weight:bold;">Open Page</a>'
 
 );
 
 }
 
 
-/* SAVE MEMORY */
+
+/* MEMORY */
 
 function saveMemory(){
 
@@ -236,7 +245,6 @@ box.innerHTML+="<div class='kaali'>KAALI is thinking...</div>";
 box.scrollTop=box.scrollHeight;
 
 
-
 let res=await fetch("/api/chat",{
 
 method:"POST",
@@ -257,7 +265,6 @@ let data=await res.json();
 box.removeChild(box.lastChild);
 
 
-
 /* REDIRECT */
 
 if(data.url){
@@ -270,8 +277,6 @@ return;
 
 
 
-/* SAVE */
-
 history.push({
 
 role:"assistant",
@@ -281,7 +286,6 @@ content:data.reply
 });
 
 saveMemory();
-
 
 lastReply=data.reply;
 
@@ -294,8 +298,6 @@ box.innerHTML+=
 
 
 
-/* BUTTON */
-
 if(data.goto){
 
 box.innerHTML+=
@@ -305,22 +307,10 @@ box.innerHTML+=
 }
 
 
-
 box.scrollTop=box.scrollHeight;
 
 }
 
-
-
-/* ENTER */
-
-document.getElementById("input")
-
-.addEventListener("keydown",e=>{
-
-if(e.key==="Enter") send();
-
-});
 
 
 /* VOICE */
