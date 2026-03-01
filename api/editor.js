@@ -1,3 +1,14 @@
+export default async function handler(req, res) {
+
+  res.setHeader("Access-Control-Allow-Origin", "https://dejoiy.com");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  try {
 import OpenAI from "openai";
 
 const openai=new OpenAI({
