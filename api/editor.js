@@ -1,14 +1,15 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+export const config = {
+  api: {
+    bodyParser: false
+  }
+};
 
 export default async function handler(req, res) {
 
-  // CORS Headers
   res.setHeader("Access-Control-Allow-Origin", "https://dejoiy.com");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
@@ -17,68 +18,80 @@ export default async function handler(req, res) {
 
   try {
 
-    const { prompt } = req.body;
+    const formidable = (await import("formidable")).default;
+    const fs = await import("fs");
 
-    if (!prompt) {
-      return res.status(400).json({ result: "No prompt provided" });
+    const form = formidable();
+
+    const [fields, files] = await form.parse(req);
+
+    const prompt = fields.prompt?.[0] || "";
+
+    let imageBase64 = null;
+
+    if (files.file) {
+      const file = files.file[0];
+      const buffer = fs.readFileSync(file.filepath);
+      imageBase64 = buffer.toString("base64");
+    }
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+
+    let messages = [
+      {
+        role: "system",
+        content: `You are KAALI SUPREME EDITOR.
+Return JSON only:
+{
+  "action": "",
+  "data": {}
+}`
+      },
+      {
+        role: "user",
+        content: prompt
+      }
+    ];
+
+    if (imageBase64) {
+      messages.push({
+        role: "user",
+        content: [
+          { type: "text", text: "Analyze this image for marketplace action." },
+          {
+            type: "image_url",
+            image_url: {
+              url: `data:image/jpeg;base64,${imageBase64}`
+            }
+          }
+        ]
+      });
     }
 
     const ai = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-         content: `
-You are KAALI SUPREME EDITOR.
-
-When user says:
-
-- "add page X" → action: "create_page"
-- "add product X price Y stock Z" → action: "add_product"
-- "delete product id X" → action: "delete_product"
-
-Always return strict JSON:
-
-{
-  "action": "action_name",
-  "data": { ... }
-}
-`
-          `
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ]
+      messages: messages
     });
 
-    const content = ai.choices[0].message.content;
+    let result = JSON.parse(ai.choices[0].message.content);
 
-    let result;
-
-    try {
-      result = JSON.parse(content);
-    } catch (err) {
-      return res.status(500).json({ result: "AI did not return valid JSON" });
-    }
-
-   await fetch("https://dejoiy.com/wp-json/kaali/v2/editor", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "x-kaali-secret": "KAALI_SUPREME_2026"
-  },
-  body: JSON.stringify(result)
-});
-    return res.status(200).json({
-      result: "KAALI SUPREME executed successfully."
+    await fetch("https://dejoiy.com/wp-json/kaali/v2/editor", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-kaali-secret": "KAALI_SUPREME_2026"
+      },
+      body: JSON.stringify(result)
     });
 
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      result: "Editor Error"
-    });
+    res.json({ result: "KAALI SUPREME executed successfully." });
+
+  } catch (e) {
+
+    console.error(e);
+    res.json({ result: "Editor Error" });
+
   }
 }
