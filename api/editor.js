@@ -28,15 +28,22 @@ export default async function handler(req, res) {
       messages: [
         {
           role: "system",
-          content: `
+         content: `
 You are KAALI SUPREME EDITOR.
 
-Return ONLY JSON in this format:
+When user says:
+
+- "add page X" → action: "create_page"
+- "add product X price Y stock Z" → action: "add_product"
+- "delete product id X" → action: "delete_product"
+
+Always return strict JSON:
 
 {
-  "action": "",
-  "data": {}
+  "action": "action_name",
+  "data": { ... }
 }
+`
           `
         },
         {
