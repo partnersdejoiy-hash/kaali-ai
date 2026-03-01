@@ -56,14 +56,14 @@ Return ONLY JSON in this format:
       return res.status(500).json({ result: "AI did not return valid JSON" });
     }
 
-    await fetch("https://dejoiy.com/wp-json/kaali/v2/editor", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(result)
-    });
-
+   await fetch("https://dejoiy.com/wp-json/kaali/v2/editor", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "x-kaali-secret": "KAALI_SUPREME_2026"
+  },
+  body: JSON.stringify(result)
+});
     return res.status(200).json({
       result: "KAALI SUPREME executed successfully."
     });
