@@ -14,19 +14,25 @@ const text=
 messages[messages.length-1].content.toLowerCase();
 
 
-/* ORDER TRACKING */
+
+/* ORDERS */
 
 if(text.includes("order")){
 
+try{
+
 let r=await fetch(
-"https://dejoiy.com/wp-json/kaali/v1/orders"
+"https://www.dejoiy.com/wp-json/kaali/v1/orders"
 );
 
 if(!r.ok){
 
 return res.json({
-reply:"Please login to see orders",
+
+reply:"Please login to track orders.",
+
 goto:"https://www.dejoiy.com/login"
+
 });
 
 }
@@ -36,18 +42,20 @@ let orders=await r.json();
 if(!orders.length){
 
 return res.json({
+
 reply:"No recent orders found."
+
 });
 
 }
 
-let reply="Your Orders:\n\n";
+let reply="Your recent orders:\n\n";
 
 orders.forEach(o=>{
 
 reply+=
 "Order #"+o.id+
-"\nStatus: "+o.status+
+"\nStatus "+o.status+
 "\nTotal ₹"+o.total+
 "\n\n";
 
@@ -55,24 +63,47 @@ reply+=
 
 return res.json({reply});
 
+}catch{
+
+return res.json({
+
+reply:"Please login first.",
+
+goto:"https://www.dejoiy.com/login"
+
+});
+
+}
+
 }
 
 
-/* POLICY EXPLANATION */
 
-if(text.includes("refund")){
+/* HUMAN SUPPORT */
+
+if(
+
+text.includes("refund")||
+text.includes("return")||
+text.includes("complaint")||
+text.includes("cancel")||
+text.includes("human")
+
+){
 
 return res.json({
 
 reply:
 
-"Refunds are available for eligible products within policy limits.",
+"Contact Support:\n\nWhatsApp:\nhttps://wa.me/919217974851\n\nPhone:\n01146594424\n\nEmail:\nsupport-care@dejoiy.com",
 
-goto:"https://www.dejoiy.com/refund-policy"
+goto:
+"https://wa.me/919217974851"
 
 });
 
 }
+
 
 
 /* NAVIGATION */
@@ -93,14 +124,13 @@ url:"https://www.dejoiy.com/my-account"
 });
 
 
-/* PRODUCT SEARCH */
 
-if(text.includes("product")||text.includes("buy")){
+/* PRODUCTS */
+
+if(text.includes("buy")||text.includes("product")){
 
 let r=await fetch(
-
-"https://dejoiy.com/wp-json/kaali/v1/search?q="+text
-
+"https://www.dejoiy.com/wp-json/kaali/v1/search?q="+text
 );
 
 let p=await r.json();
@@ -108,9 +138,7 @@ let p=await r.json();
 let reply="Best Matches:\n\n";
 
 p.forEach(x=>{
-
 reply+=x.name+"\n";
-
 });
 
 return res.json({
@@ -125,7 +153,7 @@ goto:p[0]?.link
 
 
 
-/* AI MEMORY */
+/* GOD MODE */
 
 const ai=await openai.chat.completions.create({
 
@@ -139,22 +167,24 @@ content:`
 
 You are KAALI AI.
 
-You have memory.
-
-You remember the conversation.
+You remember conversation.
 
 Never say you have no memory.
 
-You help with:
+You guide Dejoiy customers.
 
-Orders
-Products
-Policies
-Navigation
+Always provide useful answers.
 
-You guide dejoiy customers.
+When possible provide links.
+
+Support:
+
+https://wa.me/919217974851
+
+support-care@dejoiy.com
 
 `
+
 },
 
 ...messages
@@ -170,12 +200,11 @@ reply:ai.choices[0].message.content
 
 });
 
+
 }catch{
 
 res.json({
-
 reply:"KAALI reconnecting..."
-
 });
 
 }
