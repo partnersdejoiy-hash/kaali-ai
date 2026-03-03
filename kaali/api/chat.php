@@ -15,8 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $clientToken = $_SERVER['HTTP_X_KAALI_CLIENT_TOKEN'] ?? '';
 $csrfToken = $_SERVER['HTTP_X_KAALI_CSRF'] ?? '';
 $expectedToken = getenv('KAALI_CLIENT_TOKEN');
+$publicToken = getenv('KAALI_PUBLIC_CLIENT_TOKEN');
+$allowedTokens = array_values(array_filter([$expectedToken, $publicToken, 'public-chat-client-v1']));
 
-if (!$expectedToken || !hash_equals($expectedToken, $clientToken) || !hash_equals($clientToken, $csrfToken)) {
+$tokenValid = in_array($clientToken, $allowedTokens, true);
+
+if (!$tokenValid || !hash_equals($clientToken, $csrfToken)) {
     http_response_code(403);
     echo json_encode(['error' => 'Invalid token']);
     exit;
