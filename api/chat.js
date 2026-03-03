@@ -1,224 +1,192 @@
 import OpenAI from "openai";
 
-const openai=new OpenAI({
-apiKey:process.env.OPENAI_API_KEY
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
 });
 
-export default async function handler(req,res){
+export default async function handler(req, res) {
 
-try{
+  try {
 
-const messages=req.body.messages||[];
+    const messages = req.body.messages || [];
+    const text = messages[messages.length - 1]?.content?.toLowerCase() || "";
 
-const text=messages[messages.length-1].content.toLowerCase();
 
+    /* =========================
+       LIVE ORDER TRACKING
+    ========================== */
 
-/* LIVE ORDER TRACKING */
+    if (text.includes("order")) {
 
-if(text.includes("order")){
+      let r = await fetch(
+        "https://www.dejoiy.com/wp-json/kaali/v1/orders",
+        {
+          headers: {
+            "x-kaali-secret": "KAALI_SUPREME_2026"
+          },
+          credentials: "include"
+        }
+      );
 
-let r=await fetch(
+      if (!r.ok) {
+        return res.json({
+          reply: "Please login to view your orders.",
+          goto: "https://www.dejoiy.com/my-account"
+        });
+      }
 
-"https://www.dejoiy.com/wp-json/kaali/v1/orders"
+      let orders = await r.json();
 
-);
+      if (!orders.length) {
+        return res.json({
+          reply: "No recent orders found in your account."
+        });
+      }
 
-if(!r.ok){
+      let reply = "Your recent orders:\n\n";
 
-return res.json({
+      orders.forEach(o => {
+        reply +=
+          "Order #" + o.id +
+          "\nStatus: " + o.status +
+          "\nTotal: ₹" + o.total +
+          "\nDate: " + o.date + "\n\n";
+      });
 
-reply:"Login required to see orders",
+      return res.json({ reply });
+    }
 
-goto:"https://www.dejoiy.com/login"
 
-});
 
-}
+    /* =========================
+       PRODUCT SEARCH
+    ========================== */
 
-let orders=await r.json();
+    if (text.includes("product") || text.includes("buy")) {
 
-if(!orders.length){
+      let r = await fetch(
+        "https://www.dejoiy.com/wp-json/kaali/v1/search?q=" + encodeURIComponent(text)
+      );
 
-return res.json({
+      let p = await r.json();
 
-reply:"No orders found"
+      if (!p.length) {
+        return res.json({
+          reply: "No products found."
+        });
+      }
 
-});
+      let reply = "Products:\n\n";
 
-}
+      p.forEach(x => {
+        reply += x.name + "\n" + x.link + "\n\n";
+      });
 
-let reply="Orders:\n\n";
+      return res.json({
+        reply,
+        goto: p[0].link
+      });
+    }
 
-orders.forEach(o=>{
 
-reply+=
 
-"Order "+o.id+
+    /* =========================
+       WHATSAPP SUPPORT
+    ========================== */
 
-"\nStatus "+o.status+
+    if (
+      text.includes("refund") ||
+      text.includes("return") ||
+      text.includes("complaint") ||
+      text.includes("cancel") ||
+      text.includes("human")
+    ) {
 
-"\nTotal "+o.total+"\n\n";
+      return res.json({
+        reply:
+          "Contact Support:\n\n" +
+          "WhatsApp:\nhttps://wa.me/919217974851\n\n" +
+          "Phone:\n01146594424\n\n" +
+          "Email:\nsupport-care@dejoiy.com"
+      });
+    }
 
-});
 
-return res.json({reply});
 
-}
+    /* =========================
+       NAVIGATION
+    ========================== */
 
+    if (text.includes("login"))
+      return res.json({ url: "https://www.dejoiy.com/login" });
 
-/* PRODUCT SEARCH */
+    if (text.includes("cart"))
+      return res.json({ url: "https://www.dejoiy.com/cart" });
 
-if(text.includes("product")||text.includes("buy")){
+    if (text.includes("account"))
+      return res.json({ url: "https://www.dejoiy.com/my-account" });
 
-let r=await fetch(
 
-"https://www.dejoiy.com/wp-json/kaali/v1/search?q="+text
 
-);
+    /* =========================
+       SELF LEARNING AI CORE
+    ========================== */
 
-let p=await r.json();
+    const ai = await openai.chat.completions.create({
 
-if(!p.length){
+      model: "gpt-4o-mini",
 
-return res.json({
+      messages: [
 
-reply:"No products found"
-
-});
-
-}
-
-let reply="Products:\n\n";
-
-p.forEach(x=>{
-
-reply+=x.name+"\n"+x.link+"\n\n";
-
-});
-
-return res.json({
-
-reply,
-
-goto:p[0].link
-
-});
-
-}
-
-
-/* WHATSAPP SUPPORT */
-
-if(
-
-text.includes("refund")||
-
-text.includes("return")||
-
-text.includes("complaint")||
-
-text.includes("cancel")||
-
-text.includes("human")
-
-){
-
-return res.json({
-
-reply:
-
-"Contact Support:\n\nWhatsApp:\nhttps://wa.me/919217974851\n\nPhone:\n01146594424\n\nEmail:\nsupport-care@dejoiy.com"
-
-});
-
-}
-
-
-/* NAVIGATION */
-
-if(text.includes("login"))
-return res.json({url:"https://www.dejoiy.com/login"});
-
-if(text.includes("cart"))
-return res.json({url:"https://www.dejoiy.com/cart"});
-
-if(text.includes("account"))
-return res.json({url:"https://www.dejoiy.com/my-account"});
-
-
-/* SELF LEARNING AI */
-
-const ai=await openai.chat.completions.create({
-
-model:"gpt-4o-mini",
-
-messages:[
-
-{
-
-role:"system",
-
-content:`
+        {
+          role: "system",
+          content: `
 
 You are KAALI AI.
 
 You remember conversation.
 
-Never say no memory.
+Never say you have no memory.
 
 You know everything about:
 
 www.dejoiy.com
-
 www.dejoiy.in
 
-Learn from:
-
+You learn from:
 Products
-
 Policies
-
 Orders
-
 FAQs
-
 Services
 
-
-Always provide clickable links.
+Always provide working clickable links.
 
 Support:
-
 https://wa.me/919217974851
-
 support-care@dejoiy.com
 
-`
+          `
+        },
 
-},
+        ...messages
 
-...messages
+      ]
 
-]
-
-});
-
-
-return res.json({
-
-reply:ai.choices[0].message.content
-
-});
+    });
 
 
-}catch{
+    return res.json({
+      reply: ai.choices[0].message.content
+    });
 
-res.json({
 
-reply:"KAALI reconnecting..."
+  } catch (e) {
 
-});
+    return res.json({
+      reply: "KAALI reconnecting..."
+    });
 
-}
+  }
 
 }
