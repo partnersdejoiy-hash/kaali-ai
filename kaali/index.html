@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KAALI • AI Commerce Assistant</title>
+  <link rel="stylesheet" href="./assets/style.css" />
+</head>
+<body>
+  <button id="kaali-launcher" aria-label="Open KAALI chat">✦</button>
+
+  <section id="kaali-chat" class="kaali-chat hidden" aria-live="polite">
+    <header class="kaali-header">
+      <div class="avatar-wrap" aria-hidden="true">
+        <img src="../kaali.png" alt="KAALI avatar" class="avatar" />
+      </div>
+      <div>
+        <h1>KAALI</h1>
+        <p>AI Commerce Assistant</p>
+      </div>
+      <button id="kaali-close" class="icon-btn" aria-label="Close chat">✕</button>
+    </header>
+
+    <main id="kaali-messages" class="messages">
+      <article class="bubble kaali">
+        Namaste 🙏 I am KAALI. I can help with orders, vendor support, and admin operations.
+      </article>
+    </main>
+
+    <form id="kaali-form" class="chat-form">
+      <input id="kaali-input" type="text" maxlength="800" placeholder="Ask KAALI..." autocomplete="off" required />
+      <button type="submit">Send</button>
+    </form>
+  </section>
+
+  <script>
+    const launcher = document.getElementById('kaali-launcher');
+    const chat = document.getElementById('kaali-chat');
+    const closeBtn = document.getElementById('kaali-close');
+    const form = document.getElementById('kaali-form');
+    const input = document.getElementById('kaali-input');
+    const messages = document.getElementById('kaali-messages');
+
+    const KAALI_API_ENDPOINT = './api/chat.js';
+    const KAALI_CLIENT_TOKEN = 'public-chat-client-v1'; // Replace with server-issued short-lived token in production.
+
+    const history = [];
+
+    const addMessage = (text, role) => {
+      const el = document.createElement('article');
+      el.className = `bubble ${role}`;
+      el.textContent = text;
+      messages.appendChild(el);
+      messages.scrollTop = messages.scrollHeight;
+    };
+
+    launcher.addEventListener('click', () => {
+      chat.classList.remove('hidden');
+      launcher.classList.add('hidden');
+      input.focus();
+    });
+
+    closeBtn.addEventListener('click', () => {
+      chat.classList.add('hidden');
+      launcher.classList.remove('hidden');
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const prompt = input.value.trim();
+      if (!prompt) return;
+
+      addMessage(prompt, 'user');
+      history.push({ role: 'user', content: prompt });
+      input.value = '';
+
+      try {
+        const response = await fetch(KAALI_API_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-kaali-client-token': KAALI_CLIENT_TOKEN,
+            'x-kaali-csrf': KAALI_CLIENT_TOKEN,
+          },
+          body: JSON.stringify({
+            role: 'guest',
+            messages: history.slice(-12),
+          }),
+        });
+
+        const payload = await response.json();
+        const reply = payload.reply || 'KAALI is temporarily unavailable.';
+        addMessage(reply, 'kaali');
+        history.push({ role: 'assistant', content: reply });
+
+        if (payload.escalate) {
+          addMessage(`Escalating to ${payload.department}. Please wait for a human agent.`, 'kaali');
+        }
+      } catch (err) {
+        addMessage('Unable to connect to KAALI backend right now.', 'kaali');
+      }
+    });
+  </script>
+</body>
+</html>
