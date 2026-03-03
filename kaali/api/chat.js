@@ -64,8 +64,13 @@ export default async function handler(req, res) {
 
   const clientToken = req.headers['x-kaali-client-token'];
   const csrfToken = req.headers['x-kaali-csrf'];
+  const configuredTokens = [
+    process.env.KAALI_CLIENT_TOKEN,
+    process.env.KAALI_PUBLIC_CLIENT_TOKEN,
+    'public-chat-client-v1',
+  ].filter(Boolean);
 
-  if (!process.env.KAALI_CLIENT_TOKEN || clientToken !== process.env.KAALI_CLIENT_TOKEN || csrfToken !== clientToken) {
+  if (!configuredTokens.includes(clientToken) || csrfToken !== clientToken) {
     return res.status(403).json({ error: 'Invalid request token' });
   }
 
